@@ -39,3 +39,9 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# arquivos gerados automaticamente pelo Expo (ferramentas de IA, não fazem parte do projeto)
+.claude/
+AGENTS.md
+CLAUDE.md
+LICENSE
