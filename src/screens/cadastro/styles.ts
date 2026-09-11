@@ -72,7 +72,7 @@ export const styles = StyleSheet.create({
     fontFamily: 'Manrope_400Regular',
     marginLeft: 3,
     marginBottom: 4,
-    color: themas.colors.black,
+    color: 'black',
     marginTop: 20,
     fontSize: 12
   },
