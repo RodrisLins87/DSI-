@@ -1,6 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
 import Cadastro from './src/screens/cadastro';
+import HomeScreen from './src/screens/Home/HomeScreen';
 
 export default function App() {
   return (
