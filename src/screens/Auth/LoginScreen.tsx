@@ -28,9 +28,13 @@ export default function LoginScreen({ navigation }: { navigation: any }) {
       <TouchableOpacity onPress={handleLogin} disabled={loading}>
         <Text>{loading ? 'Entrando...' : 'Entrar'}</Text>
       </TouchableOpacity>
+      <TouchableOpacity onPress={() => navigation.navigate('RecuperarSenha')}>
+        <Text>Esqueci minha senha</Text>
+      </TouchableOpacity>
       <TouchableOpacity onPress={() => navigation.navigate('Cadastro')}>
         <Text>Não tem conta? Criar conta</Text>
       </TouchableOpacity>
     </View>
   );
 }
+ 
