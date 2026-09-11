@@ -7,4 +7,4 @@ export const themas = {
         bordercolor:' #BFC8CB',
         divisor: '#D3E4FE'
     }
-}
+};
