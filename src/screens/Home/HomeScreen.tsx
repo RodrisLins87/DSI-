@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { doc, getDoc, collection, query, where, getCountFromServer } from 'firebase/firestore';
 import { auth, db } from '../../lib/firebase';
+import { signOut } from 'firebase/auth';
 
 interface Contadores {
   pacientes: number;
@@ -22,6 +23,15 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
     consultasHoje: 0,
   });
   const [loading, setLoading] = useState<boolean>(true);
+
+  async function handleLogout(): Promise<void> {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.log('Erro ao fazer logout:', error);
+      Alert.alert('Erro', 'Não foi possível sair da conta.');
+    }
+  }
 
   useEffect(() => {
     async function carregarDados(): Promise<void> {
@@ -75,8 +85,29 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
             Olá, {nomeClinica}
           </Text>
         </View>
-        <Ionicons name="notifications-outline" size={24} color="#0E3D3A" />
+
+        <View style={styles.headerActions}>
+          <TouchableOpacity>
+            <Ionicons
+              name="notifications-outline"
+              size={24}
+              color="#0E3D3A"
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={handleLogout}
+            style={styles.logoutButton}
+          >
+            <Ionicons
+              name="log-out-outline"
+              size={24}
+              color="#B0342A"
+            />
+          </TouchableOpacity>
+        </View>
       </View>
+
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Card grande: Pacientes */}
@@ -175,6 +206,14 @@ const styles = StyleSheet.create({
     color: '#0E3D3A',
     marginLeft: 8,
     flexShrink: 1,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  logoutButton: {
+    padding: 4,
   },
   scrollContent: {
     padding: 16,
