@@ -1,4 +1,6 @@
-🩺 VittaFlow — Sistema de Gestão de Consultas e Mitigação de Absenteísmo
+# <p align="center"><img src="src/assets/logo3.png" alt="VittaFlow Logo" width="220"/></p>
+
+# 🩺 VittaFlow — Sistema de Gestão de Consultas e Mitigação de Absenteísmo
 
 [![React Native](https://img.shields.io/badge/React%20Native-0.74+-61DAFB?style=flat&logo=react&logoColor=black)](https://reactnative.dev/)
 [![Expo](https://img.shields.io/badge/Expo-51.0+-000000?style=flat&logo=expo&logoColor=white)](https://expo.dev/)
@@ -91,7 +93,7 @@ Para instruções detalhadas de como instalar o ambiente, clonar e rodar a aplic
 
 ## 👥 8. Equipe do Projeto
 
-Projetado e desenvolvido por alunos da **Universidade Federal Rural de Pernambuco (UFRPE)**[cite: 1, 2]:
+Projetado e desenvolvido por alunos da **Universidade Federal Rural de Pernambuco (UFRPE)**:
 
 * **Bruno Rodrigo Silva Lins** — [Github](https://github.com/RodrisLins87)
 * **Guilherme Abraão Teixeira Bezerra** — [Github](https://github.com/teixeiraguilherme)
@@ -101,4 +103,6 @@ Projetado e desenvolvido por alunos da **Universidade Federal Rural de Pernambuc
 * **Thyago Murilo dos Santos** — [Github](https://github.com/ThyagomMurilo09)
 
 ---
-*Projeto desenvolvido para as disciplinas de Engenharia de Software, Projetos Interdisciplinares III e Desenvolvimento de Sistema(DSI / ESSI / PISI III) - UFRPE.*
+*Projeto desenvolvido para as disciplinas de Engenharia de Software, Projetos Interdisciplinares III e Desenvolvimento de Sistemas( ES / PISI III / DSI ) - UFRPE.*
+
+
