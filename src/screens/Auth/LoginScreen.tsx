@@ -1,5 +1,17 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  Image,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  ScrollView,
+  Platform,
+  StyleSheet,
+} from 'react-native';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../lib/firebase';
 
@@ -7,6 +19,13 @@ export default function LoginScreen({ navigation }: { navigation: any }) {
   const [email, setEmail] = useState<string>('');
   const [senha, setSenha] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
+
+  // Estados novos, apenas para UX/validação visual — não interferem na autenticação.
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [touched, setTouched] = useState<{ email: boolean; senha: boolean }>({
+    email: false,
+    senha: false,
+  });
 
   async function handleLogin(): Promise<void> {
     setLoading(true);
@@ -20,21 +39,129 @@ export default function LoginScreen({ navigation }: { navigation: any }) {
     }
   }
 
+  // Validação puramente visual: não altera handleLogin, só decide se o
+  // botão fica habilitado e se a dica de campo obrigatório aparece.
+  const isEmailFilled = email.trim().length > 0;
+  const isSenhaFilled = senha.trim().length > 0;
+  const isFormValid = isEmailFilled && isSenhaFilled;
+
   return (
-    <View>
-      <Text>Login</Text>
-      <TextInput value={email} onChangeText={setEmail} placeholder="E-mail" autoCapitalize="none" />
-      <TextInput value={senha} onChangeText={setSenha} placeholder="Senha" secureTextEntry />
-      <TouchableOpacity onPress={handleLogin} disabled={loading}>
-        <Text>{loading ? 'Entrando...' : 'Entrar'}</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigation.navigate('RecuperarSenha')}>
-        <Text>Esqueci minha senha</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigation.navigate('Cadastro')}>
-        <Text>Não tem conta? Criar conta</Text>
-      </TouchableOpacity>
-    </View>
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.card}>
+
+          {/* Logo existente do projeto */}
+          <View style={styles.logoWrap}>
+            <Image
+              source={require('../../assets/logo3.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
+          </View>
+
+          {/* Título e subtítulo */}
+          <Text style={styles.title}>Bem-vindo(a)</Text>
+          <Text style={styles.subtitle}>Acesse sua conta para continuar.</Text>
+
+          {/* E-mail */}
+          <View style={styles.field}>
+            <Text style={styles.label}>E-mail Profissional</Text>
+            <View style={styles.inputWrap}>
+              <TextInput
+                style={styles.input}
+                value={email}
+                onChangeText={setEmail}
+                onBlur={() => setTouched((prev) => ({ ...prev, email: true }))}
+                placeholder="medico@clinica.com"
+                placeholderTextColor="#9aa6a8"
+                autoCapitalize="none"
+                autoComplete="email"
+                keyboardType="email-address"
+                editable={!loading}
+              />
+            </View>
+            {touched.email && !isEmailFilled && (
+              <Text style={styles.fieldError}>Informe seu e-mail.</Text>
+            )}
+          </View>
+
+          {/* Senha */}
+          <View style={styles.field}>
+            <Text style={styles.label}>Senha</Text>
+            <View style={styles.inputWrap}>
+              <TextInput
+                style={[styles.input, styles.inputWithToggle]}
+                value={senha}
+                onChangeText={setSenha}
+                onBlur={() => setTouched((prev) => ({ ...prev, senha: true }))}
+                placeholder="••••••••"
+                placeholderTextColor="#9aa6a8"
+                secureTextEntry={!showPassword}
+                editable={!loading}
+              />
+              <TouchableOpacity
+                style={styles.toggleButton}
+                onPress={() => setShowPassword((prev) => !prev)}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Text style={styles.toggleText}>
+                  {showPassword ? 'Ocultar' : 'Mostrar'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+            {touched.senha && !isSenhaFilled && (
+              <Text style={styles.fieldError}>Informe sua senha.</Text>
+            )}
+          </View>
+
+          {/* Esqueci minha senha — navegação já existente preservada */}
+          <TouchableOpacity
+            style={styles.forgotRow}
+            onPress={() => navigation.navigate('RecuperarSenha')}
+          >
+            <Text style={styles.forgotText}>Esqueci minha senha</Text>
+          </TouchableOpacity>
+
+          {/* Botão principal */}
+          <TouchableOpacity
+            style={[
+              styles.primaryButton,
+              (loading || !isFormValid) && styles.primaryButtonDisabled,
+            ]}
+            onPress={handleLogin}
+            disabled={loading || !isFormValid}
+          >
+            {loading ? (
+              <ActivityIndicator color="#ffffff" />
+            ) : (
+              <Text style={styles.primaryButtonText}>Entrar</Text>
+            )}
+          </TouchableOpacity>
+
+          {/* Divisor */}
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>ou</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          {/* Cadastro — navegação já existente preservada */}
+          <View style={styles.signupRow}>
+            <Text style={styles.signupText}>Não tem conta? </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Cadastro')}>
+              <Text style={styles.signupLink}>Criar conta</Text>
+            </TouchableOpacity>
+          </View>
+
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -207,4 +334,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: COLORS.teal800,
   },
+<<<<<<< HEAD
 });
+=======
+});
+>>>>>>> a68b13842f10110c3dc06dcdecd021239699c756
