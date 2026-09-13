@@ -334,8 +334,4 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: COLORS.teal800,
   },
-<<<<<<< HEAD
 });
-=======
-});
->>>>>>> a68b13842f10110c3dc06dcdecd021239699c756
