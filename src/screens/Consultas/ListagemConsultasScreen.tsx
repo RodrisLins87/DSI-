@@ -12,6 +12,8 @@ interface Consulta {
   data: string;
   horario: string;
   status: string;
+  pacienteNome?: string;
+  medicoNome?: string;
 }
 
 export default function ListagemConsultasScreen({ navigation }: { navigation: any }) {
@@ -28,8 +30,8 @@ export default function ListagemConsultasScreen({ navigation }: { navigation: an
   useFocusEffect(useCallback(() => { fetchConsultas(); }, []));
 
   const filtradas = consultas.filter((c) =>
-    c.pacienteId.toLowerCase().includes(busca.toLowerCase()) ||
-    c.medicoId.toLowerCase().includes(busca.toLowerCase())
+    (c.pacienteNome ?? c.pacienteId).toLowerCase().includes(busca.toLowerCase()) ||
+    (c.medicoNome ?? c.medicoId).toLowerCase().includes(busca.toLowerCase())
   );
 
   return (
@@ -56,12 +58,12 @@ export default function ListagemConsultasScreen({ navigation }: { navigation: an
               onPress={() => navigation.navigate('DetalhesConsulta', { consultaId: item.id })}
             >
               <View style={styles.cardTop}>
-                <Text style={styles.cardTitle}>{item.pacienteId}</Text>
+                <Text style={styles.cardTitle}>{item.pacienteNome ?? item.pacienteId}</Text>
                 <View style={[styles.badge, { backgroundColor: s.bg }]}>
                   <Text style={[styles.badgeText, { color: s.text }]}>{s.label}</Text>
                 </View>
               </View>
-              <Text style={styles.cardSubtitle}>{item.medicoId}</Text>
+              <Text style={styles.cardSubtitle}>{item.medicoNome ?? item.medicoId}</Text>
               <Text style={styles.cardSubtitle}>{item.data} · {item.horario}</Text>
             </TouchableOpacity>
           );

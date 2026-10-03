@@ -8,7 +8,8 @@ import LoginScreen from '../screens/Auth/LoginScreen';
 import CadastroScreen from '../screens/Auth/CadastroScreen';
 import HomeScreen from '../screens/Home/HomeScreen';
 import RecuperarSenhaScreen from '../screens/Auth/RecuperarSenhaScreen';
-import ListagemConsultasScreen from '../screens/Consultas/ListagemConsultasScreen';   // >>> NOVO
+import ListagemConsultasScreen from '../screens/Consultas/ListagemConsultasScreen';
+import NovaConsultaScreen from '../screens/Consultas/NovaConsultaScreen';
 
 
 const Stack = createNativeStackNavigator();
@@ -34,6 +35,7 @@ export default function AppNavigator() {
         <>
           <Stack.Screen name="Home" component={HomeScreen} />
           <Stack.Screen name="Consultas" component={ListagemConsultasScreen} />
+          <Stack.Screen name="NovaConsulta" component={NovaConsultaScreen} />
         </>
         ) : (
           <>
