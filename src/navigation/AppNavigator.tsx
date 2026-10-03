@@ -10,7 +10,8 @@ import HomeScreen from '../screens/Home/HomeScreen';
 import RecuperarSenhaScreen from '../screens/Auth/RecuperarSenhaScreen';
 import ListagemConsultasScreen from '../screens/Consultas/ListagemConsultasScreen';
 import NovaConsultaScreen from '../screens/Consultas/NovaConsultaScreen';
-
+import FormularioMedicoScreen from '../screens/Medicos/FormularioMedicoScreen'; 
+import ListagemMedicosScreen from '../screens/Medicos/ListagemMedicosScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -32,11 +33,15 @@ export default function AppNavigator() {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {user ? (
-        <>
-          <Stack.Screen name="Home" component={HomeScreen} />
-          <Stack.Screen name="Consultas" component={ListagemConsultasScreen} />
-          <Stack.Screen name="NovaConsulta" component={NovaConsultaScreen} />
-        </>
+          <>
+            <Stack.Screen name="Home" component={HomeScreen} />
+            <Stack.Screen name="Consultas" component={ListagemConsultasScreen} />
+            <Stack.Screen name="NovaConsulta" component={NovaConsultaScreen} />
+            
+            {/* Ecrãs de Médicos adicionados às rotas autenticadas */}
+            <Stack.Screen name="ListagemMedicos" component={ListagemMedicosScreen} />
+            <Stack.Screen name="FormularioMedico" component={FormularioMedicoScreen} />
+          </>
         ) : (
           <>
             <Stack.Screen name="Login" component={LoginScreen} />
