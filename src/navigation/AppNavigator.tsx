@@ -1,8 +1,10 @@
+
 import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '../lib/firebase';
+
 
 import LoginScreen from '../screens/Auth/LoginScreen';
 import CadastroScreen from '../screens/Auth/CadastroScreen';
@@ -12,6 +14,8 @@ import ListagemConsultasScreen from '../screens/Consultas/ListagemConsultasScree
 import NovaConsultaScreen from '../screens/Consultas/NovaConsultaScreen';
 import FormularioMedicoScreen from '../screens/Medicos/FormularioMedicoScreen'; 
 import ListagemMedicosScreen from '../screens/Medicos/ListagemMedicosScreen';
+import PerfilClinicaScreen from '../screens/Perfil/PerfilClinicaScreen';
+
 
 const Stack = createNativeStackNavigator();
 
@@ -35,6 +39,7 @@ export default function AppNavigator() {
         {user ? (
           <>
             <Stack.Screen name="Home" component={HomeScreen} />
+            <Stack.Screen name="Perfil" component={PerfilClinicaScreen} />
             <Stack.Screen name="Consultas" component={ListagemConsultasScreen} />
             <Stack.Screen name="NovaConsulta" component={NovaConsultaScreen} />
             
