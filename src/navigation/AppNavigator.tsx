@@ -10,6 +10,7 @@ import HomeScreen from '../screens/Home/HomeScreen';
 import RecuperarSenhaScreen from '../screens/Auth/RecuperarSenhaScreen';
 import ListagemConsultasScreen from '../screens/Consultas/ListagemConsultasScreen';
 import NovaConsultaScreen from '../screens/Consultas/NovaConsultaScreen';
+import ReagendarConsultaScreen from '../screens/Consultas/ReagendarConsultaScreen';
 
 
 const Stack = createNativeStackNavigator();
@@ -36,6 +37,7 @@ export default function AppNavigator() {
           <Stack.Screen name="Home" component={HomeScreen} />
           <Stack.Screen name="Consultas" component={ListagemConsultasScreen} />
           <Stack.Screen name="NovaConsulta" component={NovaConsultaScreen} />
+          <Stack.Screen name="ReagendarConsulta" component={ReagendarConsultaScreen} />
         </>
         ) : (
           <>
