@@ -12,6 +12,7 @@ import HomeScreen from '../screens/Home/HomeScreen';
 import RecuperarSenhaScreen from '../screens/Auth/RecuperarSenhaScreen';
 import ListagemConsultasScreen from '../screens/Consultas/ListagemConsultasScreen';
 import NovaConsultaScreen from '../screens/Consultas/NovaConsultaScreen';
+import ReagendarConsultaScreen from '../screens/Consultas/ReagendarConsultaScreen';
 import FormularioMedicoScreen from '../screens/Medicos/FormularioMedicoScreen'; 
 import ListagemMedicosScreen from '../screens/Medicos/ListagemMedicosScreen';
 import PerfilClinicaScreen from '../screens/Perfil/PerfilClinicaScreen';
@@ -42,6 +43,7 @@ export default function AppNavigator() {
             <Stack.Screen name="Perfil" component={PerfilClinicaScreen} />
             <Stack.Screen name="Consultas" component={ListagemConsultasScreen} />
             <Stack.Screen name="NovaConsulta" component={NovaConsultaScreen} />
+            <Stack.Screen name="ReagendarConsulta" component={ReagendarConsultaScreen} />
             
             {/* Ecrãs de Médicos adicionados às rotas autenticadas */}
             <Stack.Screen name="ListagemMedicos" component={ListagemMedicosScreen} />

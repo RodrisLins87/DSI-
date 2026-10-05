@@ -4,6 +4,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { doc, getDoc, collection, query, where, getCountFromServer } from 'firebase/firestore';
 import { auth, db } from '../../lib/firebase';
 import { signOut } from 'firebase/auth';
+import BarraNavegacao from '../../utils/BarraNavegacao';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface Contadores {
   pacientes: number;
@@ -14,6 +16,7 @@ interface Contadores {
 }
 
 export default function HomeScreen({ navigation }: { navigation: any }) {
+  const insets = useSafeAreaInsets();
   const [nomeClinica, setNomeClinica] = useState<string>('Clínica');
   const [contadores, setContadores] = useState<Contadores>({
     pacientes: 0,
@@ -78,7 +81,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
   return (
     <View style={styles.container}>
       {/* Cabeçalho */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <View style={styles.headerLeft}>
           <Ionicons name="business" size={22} color="#0E3D3A" />
           <Text style={styles.headerTitle} numberOfLines={1}>
@@ -168,17 +171,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
       </ScrollView>
 
       {/* Rodapé de navegação */}
-      <View style={styles.tabBar}>
-        <TouchableOpacity style={styles.tabItem}>
-          <Ionicons name="home" size={22} color="#0E6B5C" />
-          <Text style={[styles.tabLabel, { color: '#0E6B5C' }]}>Início</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('Perfil')}>
-          <Ionicons name="person-outline" size={22} color="#5A6B69" />
-          <Text style={styles.tabLabel}>Perfil</Text>
-        </TouchableOpacity>
-      </View>
+      <BarraNavegacao ativa="inicio" />
     </View>
   );
 }
@@ -193,7 +186,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 50,
     paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#E2E5E9',
