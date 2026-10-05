@@ -132,13 +132,16 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
             <Text style={styles.cardValue}>{contadores.dependentes.toLocaleString('pt-BR')}</Text>
           </View>
 
-          <View style={styles.cardHalf}>
+          <TouchableOpacity 
+            style={styles.cardHalf}
+            onPress={() => navigation.navigate('ListagemMedicos')}
+          >
             <View style={[styles.iconCircle, { backgroundColor: '#B0342A' }]}>
               <Ionicons name="medkit" size={20} color="#FFFFFF" />
             </View>
             <Text style={styles.cardLabel}>Médicos</Text>
             <Text style={styles.cardValue}>{contadores.medicos}</Text>
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* Card Laudos/Exames com barra de progresso */}

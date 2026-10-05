@@ -1,8 +1,10 @@
+
 import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '../lib/firebase';
+
 
 import LoginScreen from '../screens/Auth/LoginScreen';
 import CadastroScreen from '../screens/Auth/CadastroScreen';
@@ -11,6 +13,9 @@ import RecuperarSenhaScreen from '../screens/Auth/RecuperarSenhaScreen';
 import ListagemConsultasScreen from '../screens/Consultas/ListagemConsultasScreen';
 import NovaConsultaScreen from '../screens/Consultas/NovaConsultaScreen';
 import ReagendarConsultaScreen from '../screens/Consultas/ReagendarConsultaScreen';
+import FormularioMedicoScreen from '../screens/Medicos/FormularioMedicoScreen'; 
+import ListagemMedicosScreen from '../screens/Medicos/ListagemMedicosScreen';
+import PerfilClinicaScreen from '../screens/Perfil/PerfilClinicaScreen';
 
 
 const Stack = createNativeStackNavigator();
@@ -33,12 +38,17 @@ export default function AppNavigator() {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {user ? (
-        <>
-          <Stack.Screen name="Home" component={HomeScreen} />
-          <Stack.Screen name="Consultas" component={ListagemConsultasScreen} />
-          <Stack.Screen name="NovaConsulta" component={NovaConsultaScreen} />
-          <Stack.Screen name="ReagendarConsulta" component={ReagendarConsultaScreen} />
-        </>
+          <>
+            <Stack.Screen name="Home" component={HomeScreen} />
+            <Stack.Screen name="Perfil" component={PerfilClinicaScreen} />
+            <Stack.Screen name="Consultas" component={ListagemConsultasScreen} />
+            <Stack.Screen name="NovaConsulta" component={NovaConsultaScreen} />
+            <Stack.Screen name="ReagendarConsulta" component={ReagendarConsultaScreen} />
+            
+            {/* Ecrãs de Médicos adicionados às rotas autenticadas */}
+            <Stack.Screen name="ListagemMedicos" component={ListagemMedicosScreen} />
+            <Stack.Screen name="FormularioMedico" component={FormularioMedicoScreen} />
+          </>
         ) : (
           <>
             <Stack.Screen name="Login" component={LoginScreen} />
