@@ -1,17 +1,16 @@
 import React from 'react';
 import { Modal, Text, TouchableOpacity, View, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 
 /**
  * Modal de confirmação de exclusão ("Danger Modal/Card" do protótipo).
  * Reutilizável por qualquer CRUD: quem usa define o título e a mensagem.
  *
  * Ex: <ConfirmDeleteModal
- *       visible={pacienteParaExcluir !== null}
- *       title="Excluir Paciente?"
- *       message="Ao excluir este paciente, todos os dependentes, laudos
- *                médicos e consultas vinculados também serão removidos
- *                permanentemente. Esta ação não pode ser desfeita."
+ *       visible={responsavelParaExcluir !== null}
+ *       title="Excluir Responsável?"
+ *       message="Esta ação é irreversível. Todas as informações vinculadas
+ *                a este responsável serão removidas permanentemente do sistema."
  *       onCancel={...}
  *       onConfirm={...}
  *     />
@@ -38,7 +37,7 @@ export default function ConfirmDeleteModal({
       <View style={styles.overlay}>
         <View style={styles.card}>
           <View style={styles.iconCircle}>
-            <Ionicons name="close" size={26} color="#C0392B" />
+            <MaterialIcons name="delete-forever" size={32} color="#BA1A1A" />
           </View>
 
           <Text style={styles.title}>{title}</Text>
@@ -49,6 +48,15 @@ export default function ConfirmDeleteModal({
             onPress={onConfirm}
             disabled={loading}
           >
+            {!loading && (
+              <Ionicons
+                name="warning-outline"
+                size={18}
+                color="#FFFFFF"
+                style={styles.botaoIcone}
+              />
+            )}
+
             <Text style={styles.botaoExcluirTexto}>
               {loading ? 'EXCLUINDO...' : 'EXCLUIR PERMANENTEMENTE'}
             </Text>
@@ -73,68 +81,75 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(16, 24, 26, 0.55)',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 24,
+    padding: 20,
   },
   card: {
     width: '100%',
-    maxWidth: 360,
+    maxWidth: 354,
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    paddingVertical: 28,
-    paddingHorizontal: 24,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#BFC8CB',
+    paddingTop: 24,
+    paddingBottom: 26,
+    paddingHorizontal: 26,
     alignItems: 'center',
   },
   iconCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#FBE6E4',
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#FFDAD6',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   title: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: '700',
-    color: '#1A2E35',
-    marginBottom: 8,
+    color: '#0B1C30',
+    marginBottom: 10,
     textAlign: 'center',
   },
   message: {
-    fontSize: 14,
-    color: '#5B6B70',
+    fontSize: 15,
+    color: '#40484B',
     textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: 24,
+    lineHeight: 22,
+    marginBottom: 26,
   },
   botaoExcluir: {
     width: '100%',
-    height: 52,
-    borderRadius: 12,
-    backgroundColor: '#C0392B',
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#BA1A1A',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
+  },
+  botaoIcone: {
+    marginRight: 8,
   },
   botaoExcluirTexto: {
     color: '#FFFFFF',
     fontWeight: '700',
-    fontSize: 13,
-    letterSpacing: 0.4,
+    fontSize: 14,
+    letterSpacing: 0.5,
   },
   botaoCancelar: {
     width: '100%',
-    height: 52,
-    borderRadius: 12,
+    height: 48,
+    borderRadius: 24,
     borderWidth: 1.5,
-    borderColor: '#00353F',
+    borderColor: '#004D5B',
     alignItems: 'center',
     justifyContent: 'center',
   },
   botaoCancelarTexto: {
-    color: '#00353F',
+    color: '#004D5B',
     fontWeight: '700',
-    fontSize: 13,
-    letterSpacing: 0.4,
+    fontSize: 14,
+    letterSpacing: 0.5,
   },
 });
