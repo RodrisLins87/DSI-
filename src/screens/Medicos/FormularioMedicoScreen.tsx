@@ -1,4 +1,4 @@
-import React, { useMemo, useState, ReactNode } from 'react';
+import React, { useEffect, useMemo, useState, ReactNode } from 'react';
 import {
   View,
   Text,
@@ -14,11 +14,14 @@ import {
   Platform,
   KeyboardTypeOptions,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons, Feather } from '@expo/vector-icons';
 import {
   collection,
   addDoc,
+  updateDoc,
+  doc,
+  getDoc,
   getDocs,
   query,
   where,
@@ -33,6 +36,7 @@ import {
   isValidCPF,
   isValidDate,
   isValidEmail,
+  getInitials,
 } from '../../utils/masks';
 import { ESPECIALIDADES } from '../../utils/especialidades';
 
@@ -65,7 +69,6 @@ const EMPTY_FORM: FormData = {
 
 const ALL_KEYS = Object.keys(EMPTY_FORM) as FormKeys[];
 
-// ---------- Validação (todos os campos são obrigatórios) ----------
 function validate(f: FormData): Errors {
   const e: Errors = {};
   if (!f.nome.trim()) e.nome = 'Informe o nome completo.';
@@ -96,7 +99,6 @@ function validate(f: FormData): Errors {
   return e;
 }
 
-// ---------- Campo reutilizável ----------
 interface FieldProps {
   label: string;
   value: string;
@@ -104,6 +106,7 @@ interface FieldProps {
   onBlur: () => void;
   error?: string;
   placeholder?: string;
+  editable?: boolean;
   keyboardType?: KeyboardTypeOptions;
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
   icon?: ReactNode;
@@ -117,6 +120,7 @@ function Field({
   onBlur,
   error,
   placeholder,
+  editable = true,
   keyboardType,
   autoCapitalize = 'sentences',
   icon,
@@ -125,7 +129,13 @@ function Field({
   return (
     <View style={styles.fieldWrap}>
       <Text style={styles.label}>{label}</Text>
-      <View style={[styles.inputContainer, !!error && styles.inputError]}>
+      <View
+        style={[
+          styles.inputContainer,
+          !editable && styles.inputLocked,
+          !!error && styles.inputError,
+        ]}
+      >
         {icon}
         <TextInput
           style={styles.inputText}
@@ -134,6 +144,7 @@ function Field({
           onBlur={onBlur}
           placeholder={placeholder}
           placeholderTextColor="#8A9599"
+          editable={editable}
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
           maxLength={maxLength}
@@ -144,19 +155,66 @@ function Field({
   );
 }
 
-// ---------- Tela ----------
 export default function FormularioMedicoScreen() {
   const navigation = useNavigation<any>();
+  const route = useRoute<any>();
+
+  const medicoId: string | undefined = route.params?.medicoId;
+  const isEditMode = !!medicoId;
 
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
+  const [original, setOriginal] = useState<FormData>(EMPTY_FORM);
   const [touched, setTouched] = useState<Touched>({});
+
+  const [loadingData, setLoadingData] = useState<boolean>(isEditMode);
   const [saving, setSaving] = useState<boolean>(false);
+
+  const [editing, setEditing] = useState<boolean>(!isEditMode);
   const [pickerVisible, setPickerVisible] = useState<boolean>(false);
 
   const errors = useMemo(() => validate(form), [form]);
   const isFormValid = Object.keys(errors).length === 0;
 
-  // ---------- Helpers de formulário ----------
+  useEffect(() => {
+    if (!medicoId) return;
+
+    async function loadMedico(): Promise<void> {
+      try {
+        const snap = await getDoc(doc(db, 'medicos', medicoId as string));
+        const data = snap.data();
+
+        if (!snap.exists() || !data || data.clinicaId !== auth.currentUser?.uid) {
+          Alert.alert('Erro', 'Médico não encontrado.', [
+            { text: 'OK', onPress: () => navigation.goBack() },
+          ]);
+          return;
+        }
+
+        const loaded: FormData = {
+          nome: data.nome ?? '',
+          dataNascimento: data.dataNascimento ?? '',
+          genero: data.genero ?? '',
+          raca: data.raca ?? '',
+          cpf: data.cpf ?? '',
+          crm: data.crm ?? '',
+          especialidade: data.especialidade ?? '',
+          telefone: data.telefone ?? '',
+          email: data.email ?? '',
+        };
+        setForm(loaded);
+        setOriginal(loaded);
+      } catch (error: any) {
+        Alert.alert('Erro ao carregar', error.message, [
+          { text: 'OK', onPress: () => navigation.goBack() },
+        ]);
+      } finally {
+        setLoadingData(false);
+      }
+    }
+
+    loadMedico();
+  }, [medicoId]);
+
   function setField(key: FormKeys, value: string): void {
     let v = value;
     if (key === 'cpf') v = maskCPF(value);
@@ -172,7 +230,12 @@ export default function FormularioMedicoScreen() {
 
   const err = (key: FormKeys): string | undefined => (touched[key] ? errors[key] : undefined);
 
-  // ---------- Cadastro de Médico ----------
+  function cancelEditing(): void {
+    setForm(original);
+    setTouched({});
+    setEditing(false);
+  }
+
   async function handleSave(): Promise<void> {
     setTouched(ALL_KEYS.reduce((acc, k) => ({ ...acc, [k]: true }), {} as Touched));
     if (!isFormValid) return;
@@ -185,28 +248,24 @@ export default function FormularioMedicoScreen() {
 
     setSaving(true);
     try {
-      // 1. Regra de negócio: CRM único dentro da clínica
       const crmQuery = query(
         collection(db, 'medicos'),
         where('clinicaId', '==', user.uid),
         where('crm', '==', form.crm.trim())
       );
       const crmSnap = await getDocs(crmQuery);
-
-      if (!crmSnap.empty) {
+      if (crmSnap.docs.some((d) => d.id !== medicoId)) {
         Alert.alert('CRM já cadastrado', 'Já existe um médico com este CRM na sua clínica.');
         return;
       }
 
-      // 2. Regra de negócio: CPF único dentro da clínica
       const cpfQuery = query(
         collection(db, 'medicos'),
         where('clinicaId', '==', user.uid),
         where('cpf', '==', form.cpf.trim())
       );
       const cpfSnap = await getDocs(cpfQuery);
-
-      if (!cpfSnap.empty) {
+      if (cpfSnap.docs.some((d) => d.id !== medicoId)) {
         Alert.alert('CPF já cadastrado', 'Já existe um médico com este CPF na sua clínica.');
         return;
       }
@@ -223,15 +282,22 @@ export default function FormularioMedicoScreen() {
         email: form.email.trim().toLowerCase(),
       };
 
-      await addDoc(collection(db, 'medicos'), {
-        ...payload,
-        clinicaId: user.uid,
-        createdAt: serverTimestamp(),
-      });
+      if (isEditMode && medicoId) {
+        await updateDoc(doc(db, 'medicos', medicoId), {
+          ...payload,
+          updatedAt: serverTimestamp(),
+        });
+      } else {
+        await addDoc(collection(db, 'medicos'), {
+          ...payload,
+          clinicaId: user.uid,
+          createdAt: serverTimestamp(),
+        });
+      }
 
       Alert.alert(
         'Sucesso',
-        'Médico cadastrado com sucesso!',
+        isEditMode ? 'Médico atualizado com sucesso!' : 'Médico cadastrado com sucesso!',
         [{ text: 'OK', onPress: () => navigation.goBack() }]
       );
     } catch (error: any) {
@@ -241,6 +307,14 @@ export default function FormularioMedicoScreen() {
     }
   }
 
+  if (loadingData) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <ActivityIndicator size="large" color="#006A66" />
+      </View>
+    );
+  }
+
   const saveDisabled = !isFormValid || saving;
 
   return (
@@ -248,13 +322,18 @@ export default function FormularioMedicoScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      {/* Cabeçalho */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} disabled={saving}>
           <Ionicons name="arrow-back" size={24} color="#1A2E35" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Cadastrar Médico</Text>
-        <View style={{ width: 24 }} />
+        <Text style={styles.headerTitle}>{isEditMode ? 'Médico' : 'Cadastrar Médico'}</Text>
+        {isEditMode && editing ? (
+          <TouchableOpacity onPress={cancelEditing} disabled={saving}>
+            <Text style={styles.headerAction}>Cancelar</Text>
+          </TouchableOpacity>
+        ) : (
+          <View style={{ width: 24 }} />
+        )}
       </View>
 
       <ScrollView
@@ -262,7 +341,15 @@ export default function FormularioMedicoScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* Informações Pessoais */}
+        {isEditMode && (
+          <View style={styles.avatarBox}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{getInitials(form.nome)}</Text>
+            </View>
+            <Text style={styles.avatarName}>{form.nome ? `Dr(a). ${form.nome}` : ''}</Text>
+          </View>
+        )}
+
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Informações Pessoais</Text>
 
@@ -273,6 +360,7 @@ export default function FormularioMedicoScreen() {
             onChangeText={(t) => setField('nome', t)}
             onBlur={() => markTouched('nome')}
             error={err('nome')}
+            editable={editing}
             autoCapitalize="words"
           />
           <Field
@@ -282,6 +370,7 @@ export default function FormularioMedicoScreen() {
             onChangeText={(t) => setField('dataNascimento', t)}
             onBlur={() => markTouched('dataNascimento')}
             error={err('dataNascimento')}
+            editable={editing}
             keyboardType="numeric"
             maxLength={10}
             icon={<Feather name="calendar" size={18} color="#8A9599" style={styles.icon} />}
@@ -293,6 +382,7 @@ export default function FormularioMedicoScreen() {
             onChangeText={(t) => setField('genero', t)}
             onBlur={() => markTouched('genero')}
             error={err('genero')}
+            editable={editing}
             autoCapitalize="words"
           />
           <Field
@@ -302,6 +392,7 @@ export default function FormularioMedicoScreen() {
             onChangeText={(t) => setField('raca', t)}
             onBlur={() => markTouched('raca')}
             error={err('raca')}
+            editable={editing}
             autoCapitalize="words"
           />
           <Field
@@ -311,6 +402,7 @@ export default function FormularioMedicoScreen() {
             onChangeText={(t) => setField('cpf', t)}
             onBlur={() => markTouched('cpf')}
             error={err('cpf')}
+            editable={editing}
             keyboardType="numeric"
             maxLength={14}
           />
@@ -321,12 +413,12 @@ export default function FormularioMedicoScreen() {
             onChangeText={(t) => setField('crm', t)}
             onBlur={() => markTouched('crm')}
             error={err('crm')}
+            editable={editing}
             autoCapitalize="characters"
             maxLength={6}
           />
         </View>
 
-        {/* Contato e Especialidade */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Contato e Especialidade</Text>
 
@@ -335,9 +427,11 @@ export default function FormularioMedicoScreen() {
             <TouchableOpacity
               style={[
                 styles.inputContainer,
+                !editing && styles.inputLocked,
                 !!err('especialidade') && styles.inputError,
               ]}
               activeOpacity={0.7}
+              disabled={!editing}
               onPress={() => setPickerVisible(true)}
             >
               <Text
@@ -361,6 +455,7 @@ export default function FormularioMedicoScreen() {
             onChangeText={(t) => setField('telefone', t)}
             onBlur={() => markTouched('telefone')}
             error={err('telefone')}
+            editable={editing}
             keyboardType="phone-pad"
             maxLength={15}
             icon={<Feather name="phone" size={18} color="#8A9599" style={styles.icon} />}
@@ -372,28 +467,33 @@ export default function FormularioMedicoScreen() {
             onChangeText={(t) => setField('email', t)}
             onBlur={() => markTouched('email')}
             error={err('email')}
+            editable={editing}
             keyboardType="email-address"
             autoCapitalize="none"
           />
         </View>
       </ScrollView>
 
-      {/* Rodapé fixo */}
       <View style={styles.footer}>
-        <TouchableOpacity
-          style={[styles.primaryButton, saveDisabled && styles.buttonDisabled]}
-          onPress={handleSave}
-          disabled={saveDisabled}
-        >
-          {saving ? (
-            <ActivityIndicator color="#FFFFFF" />
-          ) : (
-            <Text style={styles.primaryButtonText}>SALVAR</Text>
-          )}
-        </TouchableOpacity>
+        {isEditMode && !editing ? (
+          <TouchableOpacity style={styles.primaryButton} onPress={() => setEditing(true)} disabled={saving}>
+            <Text style={styles.primaryButtonText}>EDITAR</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={[styles.primaryButton, saveDisabled && styles.buttonDisabled]}
+            onPress={handleSave}
+            disabled={saveDisabled}
+          >
+            {saving ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.primaryButtonText}>SALVAR</Text>
+            )}
+          </TouchableOpacity>
+        )}
       </View>
 
-      {/* Seletor de especialidade */}
       <Modal
         visible={pickerVisible}
         transparent
@@ -443,6 +543,7 @@ export default function FormularioMedicoScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8F9FF' },
+  center: { alignItems: 'center', justifyContent: 'center' },
 
   header: {
     flexDirection: 'row',
@@ -456,8 +557,21 @@ const styles = StyleSheet.create({
     borderBottomColor: '#E3E8F0',
   },
   headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#006A66' },
+  headerAction: { color: '#006A66', fontWeight: '600' },
 
   scroll: { padding: 20, paddingBottom: 30 },
+
+  avatarBox: { alignItems: 'center', marginBottom: 20 },
+  avatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#0F4C4A',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: { color: '#fff', fontSize: 26, fontWeight: '700' },
+  avatarName: { marginTop: 10, fontSize: 18, fontWeight: 'bold', color: '#1A2E35' },
 
   card: {
     backgroundColor: '#fff',
@@ -481,6 +595,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: '#fff',
   },
+  inputLocked: { backgroundColor: '#F1F4F8', borderColor: '#E3E8F0' },
   inputError: { borderColor: '#BA1A1A' },
   icon: { marginRight: 10 },
   inputText: { flex: 1, fontSize: 14, color: '#1A2E35' },

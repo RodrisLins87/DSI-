@@ -42,7 +42,7 @@ function dataCurta(data: string): string {
   return `${m[1]} ${MESES_CURTOS[Number(m[2]) - 1]} ${m[3]}`;
 }
 
-// "18/10/2023" + "09:00" -> "202310180900" (serve para ordenar: mais recentes primeiro)
+// "18/10/2023" + "09:00" -> "202310180900" (ordena mais recentes primeiro)
 function chaveOrdenacao(c: Consulta): string {
   const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(c.data ?? '');
   const dia = m ? `${m[3]}${m[2]}${m[1]}` : '00000000';
@@ -53,9 +53,6 @@ function chaveOrdenacao(c: Consulta): string {
 const normalizar = (s: string): string =>
   s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
-// ---------------------------------------------------------------
-// Arrastar o card para a esquerda revela o botão "cancelar consulta"
-// ---------------------------------------------------------------
 function CartaoArrastavel({
   children,
   podeCancelar,
@@ -118,7 +115,7 @@ export default function ListagemConsultasScreen({ navigation }: { navigation: an
         getDocs(query(collection(db, 'consultas'), where('clinicaId', '==', clinicaId))),
         getDocs(query(collection(db, 'medicos'), where('clinicaId', '==', clinicaId))),
       ]);
-      // consultas antigas podem não ter a especialidade salva: busca pelo cadastro do médico
+
       const mapa: Record<string, string> = {};
       medicosSnap.docs.forEach((d) => {
         mapa[d.id] = (d.data() as any).especialidade ?? '';
@@ -135,14 +132,12 @@ export default function ListagemConsultasScreen({ navigation }: { navigation: an
     }
   }
 
-  // recarrega sempre que a tela ganhar foco (ex.: ao voltar de Nova Consulta ou Reagendar)
   useFocusEffect(
     useCallback(() => {
       fetchConsultas();
     }, []),
   );
 
-  // ---------- Cancelamento (swipe -> modal -> Firestore) ----------
   async function confirmarCancelamento(): Promise<void> {
     if (!paraCancelar) return;
     setCancelando(true);
@@ -273,8 +268,6 @@ export default function ListagemConsultasScreen({ navigation }: { navigation: an
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8F9FF' },
-
-  // cabeçalho (76 de altura + sombra leve)
   header: {
     backgroundColor: '#F8F9FF',
     shadowColor: '#000',
@@ -301,8 +294,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-
-  // busca
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -323,8 +314,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#0B1C30',
   },
-
-  // lista e cards
   lista: { paddingHorizontal: 20, paddingBottom: 24 },
   espacoEntreCards: { marginBottom: 16 },
   card: {
@@ -351,8 +340,6 @@ const styles = StyleSheet.create({
   cardRodape: { flexDirection: 'row', alignItems: 'center', height: 18, marginTop: 12 },
   iconeCaixa: { height: 18, alignItems: 'center', justifyContent: 'center' },
   rodapeTexto: { fontFamily: FONT.regular, fontSize: 14, color: '#40484B' },
-
-  // botão que aparece ao arrastar
   acaoCancelar: {
     width: 72,
     marginLeft: 8,
@@ -361,7 +348,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-
   vazio: { fontFamily: FONT.regular, textAlign: 'center', color: '#70787B', marginTop: 40 },
-
 });
