@@ -16,6 +16,7 @@ import ReagendarConsultaScreen from '../screens/Consultas/ReagendarConsultaScree
 import FormularioMedicoScreen from '../screens/Medicos/FormularioMedicoScreen'; 
 import ListagemMedicosScreen from '../screens/Medicos/ListagemMedicosScreen';
 import PerfilClinicaScreen from '../screens/Perfil/PerfilClinicaScreen';
+import EditarPerfilScreen from '../screens/Perfil/EditarPerfilScreen';
 
 
 const Stack = createNativeStackNavigator();
@@ -41,6 +42,7 @@ export default function AppNavigator() {
           <>
             <Stack.Screen name="Home" component={HomeScreen} />
             <Stack.Screen name="Perfil" component={PerfilClinicaScreen} />
+            <Stack.Screen name="EditarPerfil" component={EditarPerfilScreen} />
             <Stack.Screen name="Consultas" component={ListagemConsultasScreen} />
             <Stack.Screen name="NovaConsulta" component={NovaConsultaScreen} />
             <Stack.Screen name="ReagendarConsulta" component={ReagendarConsultaScreen} />
