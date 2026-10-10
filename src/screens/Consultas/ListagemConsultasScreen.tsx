@@ -18,7 +18,7 @@ import { collection, query, where, getDocs, updateDoc, doc, serverTimestamp } fr
 import { auth, db } from '../../lib/firebase';
 import { STATUS_STYLES } from '../../utils/statusStyles';
 import { FONT } from '../../global/fonts';
-import CancelarConsultaModal from './CancelarConsultaModal';
+//import CancelarConsultaModal from './CancelarConsultaModal';
 import BarraNavegacao from '../../utils/BarraNavegacao';
 
 interface Consulta {
@@ -261,12 +261,7 @@ export default function ListagemConsultasScreen({ navigation }: { navigation: an
 
       <BarraNavegacao ativa="inicio" />
 
-      <CancelarConsultaModal
-        visible={paraCancelar !== null}
-        loading={cancelando}
-        onManter={() => setParaCancelar(null)}
-        onCancelar={confirmarCancelamento}
-      />
+      
     </View>
   );
 }

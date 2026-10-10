@@ -7,12 +7,14 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { auth, db } from '../../lib/firebase';
 import { getInitials } from '../../utils/masks';
+import ConfirmDeleteModal from '../../utils/ConfirmDeleteModal';
 
 interface Medico {
   id: string;
@@ -23,7 +25,6 @@ interface Medico {
   clinicaId: string;
 }
 
-// remove acentos e deixa minúsculo para a busca
 const normalizar = (s: string): string =>
   s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
@@ -34,6 +35,9 @@ export default function ListagemMedicosScreen() {
   const [busca, setBusca] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
+
+  const [medicoParaExcluir, setMedicoParaExcluir] = useState<Medico | null>(null);
+  const [deleting, setDeleting] = useState<boolean>(false);
 
   async function fetchMedicos(): Promise<void> {
     if (!auth.currentUser) {
@@ -57,12 +61,27 @@ export default function ListagemMedicosScreen() {
     }
   }
 
-  // recarrega sempre que a tela ganhar foco (ex.: ao voltar do formulário)
   useFocusEffect(
     useCallback(() => {
       fetchMedicos();
     }, [])
   );
+
+  async function handleConfirmDelete(): Promise<void> {
+    if (!medicoParaExcluir) return;
+
+    setDeleting(true);
+    try {
+      await deleteDoc(doc(db, 'medicos', medicoParaExcluir.id));
+      setMedicos((prev) => prev.filter((m) => m.id !== medicoParaExcluir.id));
+      setMedicoParaExcluir(null);
+      Alert.alert('Sucesso', 'Médico excluído com sucesso!');
+    } catch (error: any) {
+      Alert.alert('Erro ao excluir', error.message);
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   const termo = normalizar(busca.trim());
   const filtrados = medicos.filter(
@@ -109,11 +128,21 @@ export default function ListagemMedicosScreen() {
               <View style={styles.avatar}>
                 <Text style={styles.avatarText}>{getInitials(item.nome)}</Text>
               </View>
+
               <View style={styles.cardInfo}>
                 <Text style={styles.cardTitle}>{item.nome}</Text>
                 <Text style={styles.cardSubtitle}>{item.especialidade}</Text>
                 <Text style={styles.cardCrm}>{item.crm}</Text>
               </View>
+
+              <TouchableOpacity
+                style={styles.deleteIconButton}
+                activeOpacity={0.6}
+                onPress={() => setMedicoParaExcluir(item)}
+              >
+                <Ionicons name="trash-outline" size={20} color="#BA1A1A" />
+              </TouchableOpacity>
+
               <Ionicons name="chevron-forward" size={20} color="#8A9599" />
             </TouchableOpacity>
           )}
@@ -125,7 +154,6 @@ export default function ListagemMedicosScreen() {
         />
       )}
 
-      {/* Botão fixo de adicionar (modo criação: sem medicoId) */}
       <TouchableOpacity
         style={styles.fab}
         activeOpacity={0.85}
@@ -134,6 +162,15 @@ export default function ListagemMedicosScreen() {
         <Ionicons name="add" size={22} color="#FFFFFF" />
         <Text style={styles.fabText}>Adicionar Médico</Text>
       </TouchableOpacity>
+
+      <ConfirmDeleteModal
+        visible={medicoParaExcluir !== null}
+        title="Excluir Médico?"
+        message={`Esta ação é irreversível. O médico ${medicoParaExcluir?.nome ?? ''} será removido permanentemente do sistema.`}
+        onCancel={() => setMedicoParaExcluir(null)}
+        onConfirm={handleConfirmDelete}
+        loading={deleting}
+      />
     </View>
   );
 }
@@ -176,6 +213,10 @@ const styles = StyleSheet.create({
   cardTitle: { fontSize: 16, fontWeight: 'bold', color: '#1A2E35' },
   cardSubtitle: { color: '#5B6B70', marginTop: 2 },
   cardCrm: { color: '#8A9599', marginTop: 2, fontSize: 12 },
+  deleteIconButton: {
+    padding: 8,
+    marginRight: 4,
+  },
   empty: { textAlign: 'center', color: '#8A9599', marginTop: 40 },
   fab: {
     position: 'absolute',
