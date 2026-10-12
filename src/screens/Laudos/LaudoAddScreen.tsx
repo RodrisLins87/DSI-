@@ -5,10 +5,16 @@ import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { useFonts, Manrope_400Regular, Manrope_700Bold } from '@expo-google-fonts/manrope';
 import * as DocumentPicker from 'expo-document-picker';
 import { Picker } from '@react-native-picker/picker';
+import * as mascaras from '../../utils/masks';
+import { auth, db } from '../../lib/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
-export default function LaudoAddScreen(){
+
+export default function LaudoAddScreen({ navigation }: { navigation:any}){
 
     useFonts({ Manrope_400Regular, Manrope_700Bold });
+
+    const clinicaID = auth.currentUser?.uid;
 
     const [paciente, setPaciente] = useState('');
     const [tipo_exame, setTipoexame] = useState('');
@@ -26,11 +32,46 @@ async function escolherArquivo() {
         setArquivo(resultado.assets[0]);
     }
 }
+
+async function salvar() {
+    if (!clinicaID) {
+        alert('Não foi possível identificar a clínica.');
+        return;
+    }
+    if (!paciente || !tipo_exame || !medico) {
+        alert('Preencha todos os campos obrigatórios!');
+        return;
+    }
+
+    if (!mascaras.isValidDate(data_exame)) {
+        alert('Digite uma data válida (dd/mm/aaaa).');
+        return;
+    }
+
+    const [dia, mes, ano] = data_exame.split('/').map(Number);
+
+    try {
+        await addDoc(collection(db, 'clinicas', clinicaID, 'laudos'), {
+            paciente,
+            medico,
+            tipoExame: tipo_exame,
+            dataExame: new Date(ano, mes - 1, dia),
+            observacoes: observacoes_adicionais,
+            nomeArquivo: arquivo?.name ?? null,
+            criadoEm: serverTimestamp(),
+        });
+        alert('Laudo salvo com sucesso!');
+        navigation.goBack();
+    } catch (erro) {
+        console.log(erro);
+        alert('Erro ao salvar o laudo.');
+    }
+}
     
     return (
         <View style={estilos.container}>
             <View style={estilos.header}>
-                <TouchableOpacity>
+                <TouchableOpacity onPress={() => navigation.goBack()}>
                     <Ionicons name="arrow-back" size={24} color='#40484B' />
                 </TouchableOpacity>
                 <Text style={estilos.headerTitle}>Novo Laudo/Exame</Text>
@@ -77,9 +118,10 @@ async function escolherArquivo() {
                         <TextInput
                             style={estilos.inputText}
                             value={data_exame}
-                            onChangeText={setDataexame}
-                            placeholder='dd/mm/yyyy'
+                            onChangeText={(texto) => setDataexame(mascaras.maskDate(texto))}
+                            placeholder='dd/mm/aaaa'
                             placeholderTextColor='#6B7280'
+                            keyboardType='numeric'
                             maxLength={10}
                         ></TextInput>
                     </View> 
@@ -98,6 +140,8 @@ async function escolherArquivo() {
                     >
                         <TextInput
                         style={estilos.inputText}
+                        value={observacoes_adicionais}
+                        onChangeText={setObsadicional}
                         multiline
                         placeholder='Digite observações relevantes...'
                         placeholderTextColor='#6B7280'
@@ -108,7 +152,7 @@ async function escolherArquivo() {
             </ScrollView>
 
             <View style={estilos.BottomBox}>
-                    <TouchableOpacity style={estilos.SaveButton}>
+                    <TouchableOpacity style={estilos.SaveButton} onPress={salvar}>
                         <Text style={estilos.SaveButtonText}>SALVAR </Text>
                     </TouchableOpacity>
                 
