@@ -67,21 +67,50 @@ export default function ListagemMedicosScreen() {
     }, [])
   );
 
-  async function handleConfirmDelete(): Promise<void> {
-    if (!medicoParaExcluir) return;
+ async function handleConfirmDelete(): Promise<void> {
+  if (!medicoParaExcluir) return;
 
-    setDeleting(true);
-    try {
-      await deleteDoc(doc(db, 'medicos', medicoParaExcluir.id));
-      setMedicos((prev) => prev.filter((m) => m.id !== medicoParaExcluir.id));
+  setDeleting(true);
+  try {
+    const clinicaId = auth.currentUser?.uid;
+    const qConsultas = query(
+      collection(db, 'consultas'),
+      where('clinicaId', '==', clinicaId),
+      where('medicoId', '==', medicoParaExcluir.id)
+    );
+    const snapConsultas = await getDocs(qConsultas);
+
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    const consultasAtivas = snapConsultas.docs.filter((d) => {
+      const c = d.data();
+      if (c.status === 'cancelada') return false;
+      const partes = (c.data ?? '').split('/');
+      if (partes.length !== 3) return false;
+      const dataConsulta = new Date(Number(partes[2]), Number(partes[1]) - 1, Number(partes[0]));
+      return dataConsulta >= hoje;
+    });
+
+    if (consultasAtivas.length > 0) {
       setMedicoParaExcluir(null);
-      Alert.alert('Sucesso', 'Médico excluído com sucesso!');
-    } catch (error: any) {
-      Alert.alert('Erro ao excluir', error.message);
-    } finally {
-      setDeleting(false);
+      Alert.alert(
+        'Não é possível excluir',
+        `O(A) Dr(a). ${medicoParaExcluir.nome} possui ${consultasAtivas.length} consulta(s) futura(s) agendada(s). Reagende ou cancele as consultas antes de excluir o cadastro.`
+      );
+      return;
     }
+
+    await deleteDoc(doc(db, 'medicos', medicoParaExcluir.id));
+    setMedicos((prev) => prev.filter((m) => m.id !== medicoParaExcluir.id));
+    setMedicoParaExcluir(null);
+    Alert.alert('Sucesso', 'Médico excluído com sucesso!');
+  } catch (error: any) {
+    Alert.alert('Erro ao excluir', error.message);
+  } finally {
+    setDeleting(false);
   }
+}
 
   const termo = normalizar(busca.trim());
   const filtrados = medicos.filter(
