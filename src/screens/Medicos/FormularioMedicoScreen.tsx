@@ -38,7 +38,15 @@ import {
   isValidEmail,
   getInitials,
 } from '../../utils/masks';
+
 import { ESPECIALIDADES } from '../../utils/especialidades';
+
+import {
+  DIAS_SEMANA,
+  horaParaMinutos,
+  temSobreposicao,
+  IntervaloDisponibilidade,
+} from '../../utils/disponibilidadeUtils';
 
 type FormKeys =
   | 'nome'
@@ -66,6 +74,8 @@ const EMPTY_FORM: FormData = {
   telefone: '',
   email: '',
 };
+
+
 
 const ALL_KEYS = Object.keys(EMPTY_FORM) as FormKeys[];
 
@@ -171,6 +181,15 @@ export default function FormularioMedicoScreen() {
 
   const [editing, setEditing] = useState<boolean>(!isEditMode);
   const [pickerVisible, setPickerVisible] = useState<boolean>(false);
+  // --- ESTADOS DE DISPONIBILIDADE ---
+  const [disponibilidade, setDisponibilidade] = useState<IntervaloDisponibilidade[]>([]);
+  const [originalDisponibilidade, setOriginalDisponibilidade] = useState<IntervaloDisponibilidade[]>([]);
+
+  // Campos do formulário de novo intervalo
+  const [diaSelecionado, setDiaSelecionado] = useState<number>(1); // 1 = Segunda-feira
+  const [horaInicio, setHoraInicio] = useState<string>('');
+  const [horaFim, setHoraFim] = useState<string>('');
+  const [modalDiaVisible, setModalDiaVisible] = useState<boolean>(false);
 
   const errors = useMemo(() => validate(form), [form]);
   const isFormValid = Object.keys(errors).length === 0;
@@ -203,6 +222,9 @@ export default function FormularioMedicoScreen() {
         };
         setForm(loaded);
         setOriginal(loaded);
+        const dispSalva: IntervaloDisponibilidade[] = data.disponibilidade ?? [];
+        setDisponibilidade(dispSalva);
+        setOriginalDisponibilidade(dispSalva);
       } catch (error: any) {
         Alert.alert('Erro ao carregar', error.message, [
           { text: 'OK', onPress: () => navigation.goBack() },
@@ -236,9 +258,122 @@ export default function FormularioMedicoScreen() {
     setEditing(false);
   }
 
+  function handleAddIntervalo(): void {
+    const inicioNorm = horaInicio.trim();
+    const fimNorm = horaFim.trim();
+
+    const regexHora = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    if (!regexHora.test(inicioNorm) || !regexHora.test(fimNorm)) {
+      Alert.alert('Horário inválido', 'Informe os horários no formato HH:MM (ex: 08:00).');
+      return;
+    }
+
+    if (horaParaMinutos(inicioNorm) >= horaParaMinutos(fimNorm)) {
+      Alert.alert('Horário inválido', 'O horário de término deve ser posterior ao horário de início.');
+      return;
+    }
+
+    const novoIntervalo: IntervaloDisponibilidade = {
+      id: Date.now().toString(),
+      diaSemana: diaSelecionado,
+      horaInicio: inicioNorm,
+      horaFim: fimNorm,
+    };
+
+    const sobrepoe = disponibilidade.some((item) => temSobreposicao(novoIntervalo, item));
+    if (sobrepoe) {
+      Alert.alert(
+        'Conflito de Horário',
+        'Este profissional já possui um intervalo de atendimento sobreposto cadastrado para este dia.'
+      );
+      return;
+    }
+
+    setDisponibilidade((prev) => [...prev, novoIntervalo]);
+    setHoraInicio('');
+    setHoraFim('');
+  }
+
+  function handleRemoveIntervalo(id: string): void {
+    setDisponibilidade((prev) => prev.filter((item) => item.id !== id));
+  }
+
+  async function validarConflitosConsultasFuturas(
+  medicoId: string,
+  novaDisponibilidade: IntervaloDisponibilidade[]
+) {
+  const clinicaId = auth.currentUser?.uid;
+  if (!clinicaId) return [];
+
+  // Busca as consultas da clínica para este médico
+  const q = query(
+    collection(db, 'consultas'),
+    where('clinicaId', '==', clinicaId),
+    where('medicoId', '==', medicoId)
+  );
+
+  const snap = await getDocs(q);
+  const consultasAfetadas = [];
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+
+  for (const docSnap of snap.docs) {
+    const consulta = docSnap.data();
+
+    // Desconsidera consultas canceladas
+    if (consulta.status === 'cancelada') continue;
+
+    // Converte "DD/MM/AAAA" para Date
+    const partes = (consulta.data ?? '').split('/');
+    if (partes.length !== 3) continue;
+    const dataConsulta = new Date(Number(partes[2]), Number(partes[1]) - 1, Number(partes[0]));
+
+    // Considera apenas consultas de hoje em diante
+    if (dataConsulta < hoje) continue;
+
+    const diaSemana = dataConsulta.getDay(); // 0 = Domingo, 1 = Segunda...
+    const horaConsulta = consulta.horario ?? ''; // ex: "09:00"
+
+    // Verifica se o horário está coberto pela nova disponibilidade
+    const coberta = novaDisponibilidade.some((d) => {
+      if (d.diaSemana !== diaSemana) return false;
+      const minConsulta = horaParaMinutos(horaConsulta);
+      return (
+        minConsulta >= horaParaMinutos(d.horaInicio) &&
+        minConsulta < horaParaMinutos(d.horaFim)
+      );
+    });
+
+    if (!coberta) {
+      consultasAfetadas.push(consulta);
+    }
+  }
+
+  return consultasAfetadas;
+}
+
   async function handleSave(): Promise<void> {
     setTouched(ALL_KEYS.reduce((acc, k) => ({ ...acc, [k]: true }), {} as Touched));
     if (!isFormValid) return;
+    
+    if (disponibilidade.length === 0) {
+      Alert.alert(
+        'Disponibilidade obrigatória',
+        'Cadastre ao menos um dia e faixa de horário de atendimento para o profissional.'
+      );
+      return;
+    }
+
+    if (isEditMode && medicoId) {
+      const consultasAfetadas = await validarConflitosConsultasFuturas(medicoId, disponibilidade);
+      if (consultasAfetadas.length > 0) {
+        Alert.alert(
+          'Conflito com Consultas Agendadas',
+          `Existem ${consultasAfetadas.length} consulta(s) futura(s) agendada(s) fora da nova disponibilidade. Reagende essas consultas antes de salvar.`
+        );
+        return;
+      }
+    }
 
     const user = auth.currentUser;
     if (!user) {
@@ -280,6 +415,7 @@ export default function FormularioMedicoScreen() {
         especialidade: form.especialidade,
         telefone: form.telefone,
         email: form.email.trim().toLowerCase(),
+        disponibilidade,
       };
 
       if (isEditMode && medicoId) {
@@ -472,6 +608,75 @@ export default function FormularioMedicoScreen() {
             autoCapitalize="none"
           />
         </View>
+        {/* CARD DE DISPONIBILIDADE */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Disponibilidade de Atendimento</Text>
+
+          {disponibilidade.length === 0 ? (
+            <Text style={{ color: '#8A9599', marginVertical: 10 }}>
+              Nenhum horário de atendimento cadastrado.
+            </Text>
+          ) : (
+            disponibilidade.map((item) => (
+              <View key={item.id} style={styles.dispItem}>
+                <View>
+                  <Text style={styles.dispDia}>{DIAS_SEMANA[item.diaSemana]}</Text>
+                  <Text style={styles.dispHora}>
+                    {item.horaInicio} às {item.horaFim}
+                  </Text>
+                </View>
+                {editing && (
+                  <TouchableOpacity onPress={() => handleRemoveIntervalo(item.id)}>
+                    <Feather name="trash-2" size={18} color="#BA1A1A" />
+                  </TouchableOpacity>
+                )}
+              </View>
+            ))
+          )}
+
+          {editing && (
+            <View style={{ marginTop: 16, paddingTop: 14, borderTopWidth: 1, borderTopColor: '#EEF1F4' }}>
+              <Text style={styles.label}>Dia da Semana</Text>
+              <TouchableOpacity
+                style={styles.inputContainer}
+                onPress={() => setModalDiaVisible(true)}
+              >
+                <Text style={styles.inputText}>{DIAS_SEMANA[diaSelecionado]}</Text>
+                <Feather name="chevron-down" size={18} color="#1A2E35" />
+              </TouchableOpacity>
+
+              <View style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
+                <View style={{ flex: 1 }}>
+                  <Field
+                    label="Início"
+                    placeholder="08:00"
+                    value={horaInicio}
+                    onChangeText={(t) => setHoraInicio(maskDate(t).slice(0, 5))}
+                    onBlur={() => {}}
+                    keyboardType="numeric"
+                    maxLength={5}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Field
+                    label="Término"
+                    placeholder="12:00"
+                    value={horaFim}
+                    onChangeText={(t) => setHoraFim(maskDate(t).slice(0, 5))}
+                    onBlur={() => {}}
+                    keyboardType="numeric"
+                    maxLength={5}
+                  />
+                </View>
+              </View>
+
+              <TouchableOpacity style={styles.addDispBtn} onPress={handleAddIntervalo}>
+                <Feather name="plus" size={18} color="#006A66" />
+                <Text style={styles.addDispBtnText}>Adicionar Horário</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
       </ScrollView>
 
       <View style={styles.footer}>
@@ -637,4 +842,27 @@ const styles = StyleSheet.create({
     borderBottomColor: '#EEF1F4',
   },
   modalItemText: { fontSize: 15, color: '#1A2E35' },
+  dispItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F4F8',
+  },
+  dispDia: { fontSize: 14, fontWeight: '700', color: '#1A2E35' },
+  dispHora: { fontSize: 13, color: '#5B6B70', marginTop: 2 },
+  addDispBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    marginTop: 12,
+    borderWidth: 1.5,
+    borderColor: '#006A66',
+    borderRadius: 8,
+    borderStyle: 'dashed',
+  },
+  addDispBtnText: { color: '#006A66', fontWeight: '700', marginLeft: 6 },
 });
+ 
