@@ -6,8 +6,9 @@ import { useFonts, Manrope_400Regular, Manrope_700Bold } from '@expo-google-font
 import * as DocumentPicker from 'expo-document-picker';
 import { Picker } from '@react-native-picker/picker';
 import * as mascaras from '../../utils/masks';
-import { auth, db } from '../../lib/firebase';
+import { auth, db, storage } from '../../lib/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 
 export default function LaudoAddScreen({ navigation }: { navigation:any}){
