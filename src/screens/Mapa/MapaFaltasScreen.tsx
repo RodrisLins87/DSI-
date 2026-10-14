@@ -4,7 +4,16 @@ import MapView, { Marker } from 'react-native-maps';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COR, CabecalhoTela } from '../Consultas/components/AgendamentoCampos';
 import { FONT } from '../../global/fonts';
-import dados from '../../data/bairrosFaltas.json';
+import {
+  BAIRROS_MAPEADOS,
+  FAIXAS,
+  MIN_CONSULTAS,
+  TODOS_BAIRROS,
+  corDaTaxa,
+  diametroDoCirculo,
+  nomeBonito,
+  pct,
+} from './utils';
 
 /**
  * Mapa de faltas por bairro.
@@ -16,58 +25,27 @@ import dados from '../../data/bairrosFaltas.json';
  *   oscila por acaso (ex.: 2 consultas, 100% de falta).
  * - As coordenadas vêm de src/data/bairrosFaltas.json, preenchido por
  *   `node scripts/geocodificarBairros.mjs`.
+ * - Faixas de cor, filtro e formatação ficam em ./utils (o mini mapa da Home usa os mesmos).
  */
-interface Bairro {
-  nome: string;
-  consultas: number;
-  faltas: number;
-  lat: number | null;
-  lng: number | null;
-}
-
-const MIN_CONSULTAS = 100;
-
-// Cinco faixas de taxa de falta (uma só cor, de claro a escuro). A média da base é ~20%.
-const FAIXAS = [
-  { ate: 17, cor: '#FBE3C2', rotulo: 'até 17%' },
-  { ate: 19, cor: '#F6BE80', rotulo: '17–19%' },
-  { ate: 21, cor: '#EB8F4A', rotulo: '19–21%' },
-  { ate: 23, cor: '#CC5A2B', rotulo: '21–23%' },
-  { ate: Infinity, cor: '#8F2A1B', rotulo: '23% ou mais' },
-];
-const corDaTaxa = (taxa: number) => FAIXAS.find((f) => taxa < f.ate)!.cor;
-
-const PREPOSICOES = new Set(['DA', 'DE', 'DO', 'DAS', 'DOS']);
-function nomeBonito(nome: string): string {
-  return nome
-    .toLowerCase()
-    .split(' ')
-    .map((p, i) => (PREPOSICOES.has(p.toUpperCase()) && i > 0 ? p : p.charAt(0).toUpperCase() + p.slice(1)))
-    .join(' ')
-    .replace('´', "'");
-}
-const pct = (v: number, casas = 1) => v.toFixed(casas).replace('.', ',');
-
 export default function MapaFaltasScreen({ navigation }: { navigation: any }) {
   const insets = useSafeAreaInsets();
   const mapRef = useRef<MapView>(null);
   const [selecionado, setSelecionado] = useState<string | null>(null);
 
-  const todos = dados as Bairro[];
   const { mediaGeral, mapeados, cobertura } = useMemo(() => {
-    const totalConsultas = todos.reduce((s, b) => s + b.consultas, 0);
-    const totalFaltas = todos.reduce((s, b) => s + b.faltas, 0);
-    const mapeados = todos.filter((b) => b.lat != null && b.lng != null && b.consultas >= MIN_CONSULTAS);
+    const totalConsultas = TODOS_BAIRROS.reduce((s, b) => s + b.consultas, 0);
+    const totalFaltas = TODOS_BAIRROS.reduce((s, b) => s + b.faltas, 0);
+    const mapeados = BAIRROS_MAPEADOS;
     const consultasMapeadas = mapeados.reduce((s, b) => s + b.consultas, 0);
     return {
       mediaGeral: (totalFaltas / totalConsultas) * 100,
       mapeados,
       cobertura: (consultasMapeadas / totalConsultas) * 100,
     };
-  }, [todos]);
+  }, []);
 
   const maiorN = Math.max(1, ...mapeados.map((b) => b.consultas));
-  const diametro = (n: number) => 16 + 30 * Math.sqrt(n / maiorN);
+  const diametro = (n: number) => diametroDoCirculo(n, maiorN);
   const atual = mapeados.find((b) => b.nome === selecionado) ?? null;
 
   function ajustarMapa() {
