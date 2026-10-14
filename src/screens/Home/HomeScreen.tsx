@@ -6,6 +6,8 @@ import { auth, db } from '../../lib/firebase';
 import { signOut } from 'firebase/auth';
 import BarraNavegacao from '../../utils/BarraNavegacao';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import ResumoClinica from './components/ResumoClinica';
+import MapaFaltasResumo from './components/MapaFaltasResumo';
 
 interface Contadores {
   pacientes: number;
@@ -113,6 +115,9 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
 
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ResumoClinica />
+        <MapaFaltasResumo />
+
         {/* Card grande: Pacientes */}
         <View style={styles.cardFull}>
           <View style={[styles.iconCircle, { backgroundColor: '#0E3D3A' }]}>
@@ -167,18 +172,6 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
           </View>
           <Text style={styles.cardLabelDark}>Consultas do Dia</Text>
           <Text style={styles.cardValueDark}>{contadores.consultasHoje}</Text>
-        </TouchableOpacity>
-
-        {/* Card: Mapa de Faltas */}
-        <TouchableOpacity
-          style={styles.cardFull}
-          onPress={() => navigation.navigate('MapaFaltas')}
-        >
-          <View style={[styles.iconCircle, { backgroundColor: '#3FD9C4' }]}>
-            <Ionicons name="map" size={20} color="#FFFFFF" />
-          </View>
-          <Text style={styles.cardTitle}>Mapa de Faltas</Text>
-          <Text style={styles.cardLabel}>Taxa de falta por bairro</Text>
         </TouchableOpacity>
       </ScrollView>
 
@@ -264,12 +257,6 @@ const styles = StyleSheet.create({
   cardLabel: {
     fontSize: 14,
     color: '#5A6B69',
-    marginBottom: 4,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#0E3D3A',
     marginBottom: 4,
   },
   cardValue: {
