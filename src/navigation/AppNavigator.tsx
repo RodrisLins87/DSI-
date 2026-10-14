@@ -18,6 +18,7 @@ import ListagemMedicosScreen from '../screens/Medicos/ListagemMedicosScreen';
 import PerfilClinicaScreen from '../screens/Perfil/PerfilClinicaScreen';
 import EditarPerfilScreen from '../screens/Perfil/EditarPerfilScreen';
 import AgendaMedicoScreen from '../screens/Medicos/AgendaMedicoScreen';
+import MapaFaltasScreen from '../screens/Mapa/MapaFaltasScreen';
 
 
 
@@ -53,6 +54,7 @@ export default function AppNavigator() {
             <Stack.Screen name="ListagemMedicos" component={ListagemMedicosScreen} />
             <Stack.Screen name="FormularioMedico" component={FormularioMedicoScreen} />
             <Stack.Screen name="AgendaMedico" component={AgendaMedicoScreen} />
+            <Stack.Screen name="MapaFaltas" component={MapaFaltasScreen} />
           </>
         ) : (
           <>

@@ -6,6 +6,8 @@ import { auth, db } from '../../lib/firebase';
 import { signOut } from 'firebase/auth';
 import BarraNavegacao from '../../utils/BarraNavegacao';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import ResumoClinica from './components/ResumoClinica';
+import MapaFaltasResumo from './components/MapaFaltasResumo';
 
 interface Contadores {
   pacientes: number;
@@ -113,6 +115,9 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
 
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ResumoClinica />
+        <MapaFaltasResumo />
+
         {/* Card grande: Pacientes */}
         <View style={styles.cardFull}>
           <View style={[styles.iconCircle, { backgroundColor: '#0E3D3A' }]}>
