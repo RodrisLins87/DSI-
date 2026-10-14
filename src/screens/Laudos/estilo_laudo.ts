@@ -176,5 +176,18 @@ uploadSub: {
     paddingHorizontal: 16,
 },
 
+modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
+modalSheet: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    maxHeight: '70%',
+},
+modalTitle: { fontFamily: 'Manrope_700Bold', fontSize: 16, color: '#0B1C30', marginBottom: 10 },
+modalItem: { paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#EEF1F4' },
+modalItemText: { fontFamily: 'Manrope_400Regular', fontSize: 14, color: '#0B1C30' },
+modalVazio: { textAlign: 'center', color: '#6B7280', marginTop: 20 },
+
 })
 
