@@ -168,6 +168,18 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
           <Text style={styles.cardLabelDark}>Consultas do Dia</Text>
           <Text style={styles.cardValueDark}>{contadores.consultasHoje}</Text>
         </TouchableOpacity>
+
+        {/* Card: Mapa de Faltas */}
+        <TouchableOpacity
+          style={styles.cardFull}
+          onPress={() => navigation.navigate('MapaFaltas')}
+        >
+          <View style={[styles.iconCircle, { backgroundColor: '#3FD9C4' }]}>
+            <Ionicons name="map" size={20} color="#FFFFFF" />
+          </View>
+          <Text style={styles.cardTitle}>Mapa de Faltas</Text>
+          <Text style={styles.cardLabel}>Taxa de falta por bairro</Text>
+        </TouchableOpacity>
       </ScrollView>
 
       {/* Rodapé de navegação */}
@@ -252,6 +264,12 @@ const styles = StyleSheet.create({
   cardLabel: {
     fontSize: 14,
     color: '#5A6B69',
+    marginBottom: 4,
+  },
+  cardTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#0E3D3A',
     marginBottom: 4,
   },
   cardValue: {
