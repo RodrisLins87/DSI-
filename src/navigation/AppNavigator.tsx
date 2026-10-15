@@ -16,6 +16,8 @@ import NovaConsultaScreen from '../screens/Consultas/NovaConsultaScreen';
 import ReagendarConsultaScreen from '../screens/Consultas/ReagendarConsultaScreen';
 import FormularioMedicoScreen from '../screens/Medicos/FormularioMedicoScreen'; 
 import ListagemMedicosScreen from '../screens/Medicos/ListagemMedicosScreen';
+import ListagemResponsaveisScreen from '../screens/Responsaveis/ListagemResponsaveisScreen';
+import FormularioResponsavelScreen from '../screens/Responsaveis/FormularioResponsavelScreen';
 import PerfilClinicaScreen from '../screens/Perfil/PerfilClinicaScreen';
 import EditarPerfilScreen from '../screens/Perfil/EditarPerfilScreen';
 import ConfirmarExclusaoScreen from '../screens/Perfil/ConfirmarExclusaoScreen';
@@ -58,6 +60,11 @@ export default function AppNavigator() {
             <Stack.Screen name="FormularioPaciente" component={FormularioPacienteScreen} />
             
             <Stack.Screen name="ListagemMedicos" component={ListagemMedicosScreen} />
+            
+            {/* Ecrãs de Responsáveis */}
+            <Stack.Screen name="ListagemResponsaveis" component={ListagemResponsaveisScreen} />
+            <Stack.Screen name="FormularioResponsavel" component={FormularioResponsavelScreen} />
+            
             <Stack.Screen name="FormularioMedico" component={FormularioMedicoScreen} />
             <Stack.Screen name="AgendaMedico" component={AgendaMedicoScreen} />
             <Stack.Screen name="MapaFaltas" component={MapaFaltasScreen} />
