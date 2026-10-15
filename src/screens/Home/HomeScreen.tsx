@@ -113,19 +113,21 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
         </View>
       </View>
 
-
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <ResumoClinica />
         <MapaFaltasResumo />
 
         {/* Card grande: Pacientes */}
-        <View style={styles.cardFull}>
+        <TouchableOpacity
+          style={styles.cardFull}
+          onPress={() => navigation.navigate('Pacientes')}
+        >
           <View style={[styles.iconCircle, { backgroundColor: '#0E3D3A' }]}>
             <Ionicons name="person" size={20} color="#FFFFFF" />
           </View>
           <Text style={styles.cardLabel}>Pacientes</Text>
           <Text style={styles.cardValue}>{contadores.pacientes.toLocaleString('pt-BR')}</Text>
-        </View>
+        </TouchableOpacity>
 
         {/* Linha com dois cards menores */}
         <View style={styles.row}>
