@@ -6,6 +6,7 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import ListagemPacientesScreen from '../screens/Pacientes/ListagemPacientesScreen';
 import FormularioPacienteScreen from '../screens/Pacientes/FormularioPacienteScreen';
+import GerenciarAgendaScreen from '../screens/Medicos/GerenciarAgendaScreen';
 
 import LoginScreen from '../screens/Auth/LoginScreen';
 import CadastroScreen from '../screens/Auth/CadastroScreen';
@@ -65,6 +66,7 @@ export default function AppNavigator() {
             <Stack.Screen name="ListagemResponsaveis" component={ListagemResponsaveisScreen} />
             <Stack.Screen name="FormularioResponsavel" component={FormularioResponsavelScreen} />
             
+            <Stack.Screen name="GerenciarAgenda" component={GerenciarAgendaScreen} />
             <Stack.Screen name="FormularioMedico" component={FormularioMedicoScreen} />
             <Stack.Screen name="AgendaMedico" component={AgendaMedicoScreen} />
             <Stack.Screen name="MapaFaltas" component={MapaFaltasScreen} />
