@@ -9,7 +9,7 @@ import { auth, db, storage } from '../../lib/firebase';
 import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
-type Item = { id: string; nome: string};
+type Item = { id: string; nome: string; especialidade?: string};
 
 
 export default function LaudoAddScreen(){
@@ -82,6 +82,7 @@ async function salvar() {
             pacienteNome: pacienteSel.nome,
             medicoId: medicoSel.id,
             medicoNome: medicoSel.nome,
+            medicoEspecialidade: medicoSel.especialidade ?? '',
             tipoExame: tipo_exame,
             dataExame: new Date(ano, mes - 1, dia),
             observacoes: observacoes_adicionais,
@@ -107,16 +108,20 @@ useEffect(() => {
             const snapMed = await getDocs(qMed);
             setMedicos(
                 snapMed.docs
-                    .map((d) => ({ id: d.id, nome: d.data().nome as string }))
+                    .map((d) => ({
+                        id: d.id,
+                        nome: (d.data().nome ?? '') as string,
+                        especialidade: d.data().especialidade as string,
+                    }))
                     .sort((a, b) => a.nome.localeCompare(b.nome))
             );
 
             const qPac = query(collection(db, 'pacientes'), where('clinicaId', '==', clinicaID));
             const snapPac = await getDocs(qPac);
             setPacientes(
-                snapPac.docs
-                    .map((d) => ({ id: d.id, nome: d.data().nome as string }))
-                    .sort((a, b) => a.nome.localeCompare(b.nome))
+               snapPac.docs
+                    .map((d) => ({ id: d.id, nome: (d.data().nomeCompleto ?? '') as string }))
+                    .sort((a, b) => a.nome.localeCompare(b.nome)) 
             );
         } catch (erro) {
             console.log(erro);
@@ -254,6 +259,9 @@ const listaFiltrada = lista.filter((i) =>
                                     renderItem={({ item }) => (
                                         <TouchableOpacity style={estilos.modalItem} onPress={() => escolher(item)}>
                                             <Text style={estilos.modalItemText}>{item.nome}</Text>
+                                            {item.especialidade ? (
+                                                <Text style={estilos.modalItemSub}>{item.especialidade}</Text>
+                                            ) : null}
                                         </TouchableOpacity>
                                     )}
                                 />
