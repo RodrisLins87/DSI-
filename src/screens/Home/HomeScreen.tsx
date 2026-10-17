@@ -155,7 +155,9 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
         </View>
 
         {/* Card Laudos/Exames com barra de progresso */}
-        <View style={styles.cardFull}>
+        <TouchableOpacity 
+        style={styles.cardFull}
+        onPress={() => navigation.navigate('Laudos')}>
           <View style={[styles.iconCircle, { backgroundColor: '#DCE7F5' }]}>
             <Ionicons name="document-text" size={20} color="#3E5C76" />
           </View>
@@ -165,7 +167,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
             <View style={[styles.progressBarFill, { width: '75%' }]} />
           </View>
           <Text style={styles.progressText}>75% processados hoje</Text>
-        </View>
+        </TouchableOpacity>
 
         {/* Card escuro: Consultas do Dia */}
         <TouchableOpacity
