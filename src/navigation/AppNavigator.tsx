@@ -24,6 +24,9 @@ import EditarPerfilScreen from '../screens/Perfil/EditarPerfilScreen';
 import ConfirmarExclusaoScreen from '../screens/Perfil/ConfirmarExclusaoScreen';
 import AgendaMedicoScreen from '../screens/Medicos/AgendaMedicoScreen';
 import MapaFaltasScreen from '../screens/Mapa/MapaFaltasScreen';
+import LaudoAddScreen from '../screens/Laudos/LaudoAddScreen';
+import LaudoEditScreen from '../screens/Laudos/LaudoEditScreen';
+import ListagemLaudosScreen from '../screens/Laudos/ListagemLaudosScreen';
 
 
 
@@ -59,6 +62,10 @@ export default function AppNavigator() {
             
             <Stack.Screen name="Pacientes" component={ListagemPacientesScreen} />
             <Stack.Screen name="FormularioPaciente" component={FormularioPacienteScreen} />
+
+            <Stack.Screen name="Laudos" component={ListagemLaudosScreen} />
+            <Stack.Screen name="LaudoAdd" component={LaudoAddScreen} />
+            <Stack.Screen name="LaudoEdit" component={LaudoEditScreen} />
             
             <Stack.Screen name="ListagemMedicos" component={ListagemMedicosScreen} />
             

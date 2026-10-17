@@ -5,7 +5,6 @@ export const estilos = StyleSheet.create({
     container: {
         flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
     width: '100%',
     },
 
@@ -29,12 +28,13 @@ export const estilos = StyleSheet.create({
     },
 
     MedicalReportBox: {
-        width: 350,
-        height: 117,
+        width: '100%',
         borderRadius: 12,
         borderWidth: 1,
         borderColor:'#BFC8CB',
         backgroundColor: 'white',
+        marginBottom: 10,
+        padding: 16
 
 
     },
@@ -176,7 +176,12 @@ uploadSub: {
     paddingHorizontal: 16,
 },
 
-modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
+modalOverlay: { 
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end' 
+},
+
 modalSheet: {
     backgroundColor: '#fff',
     borderTopLeftRadius: 20,
@@ -184,10 +189,251 @@ modalSheet: {
     padding: 20,
     maxHeight: '70%',
 },
-modalTitle: { fontFamily: 'Manrope_700Bold', fontSize: 16, color: '#0B1C30', marginBottom: 10 },
-modalItem: { paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#EEF1F4' },
-modalItemText: { fontFamily: 'Manrope_400Regular', fontSize: 14, color: '#0B1C30' },
-modalVazio: { textAlign: 'center', color: '#6B7280', marginTop: 20 },
+
+modalTitle: { 
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 16, 
+    color: '#0B1C30', 
+    marginBottom: 10 
+},
+
+modalItem: { 
+    paddingVertical: 14, 
+    borderBottomWidth: 1, 
+    borderBottomColor: '#EEF1F4' 
+},
+
+modalItemText: { 
+    fontFamily: 'Manrope_400Regular', 
+    fontSize: 14, 
+    color: '#0B1C30' 
+},
+
+modalVazio: { 
+    textAlign: 'center', 
+    color: '#6B7280', 
+    marginTop: 20 
+},
+modalItemSub: { 
+    fontFamily: 'Manrope_400Regular', 
+    fontSize: 12, 
+    color: '#6B7280', 
+    marginTop: 2 
+},
+
+telaLista: { 
+    flex: 1, 
+    backgroundColor: '#F8F9FF' 
+},
+
+conteudoLista: { 
+    flex: 1, 
+    paddingHorizontal: 20, 
+    paddingTop: 60 
+},
+
+headerLista: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+},
+
+tituloLista: { 
+    fontFamily: 'Manrope_700Bold', 
+    fontSize: 24, 
+    color: '#00353F' 
+},
+
+botaoAdd: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    backgroundColor: '#004D5B',
+    alignItems: 'center',
+    justifyContent: 'center',
+},
+
+buscaBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 46,
+    borderWidth: 1,
+    borderColor: '#BFC8CB',
+    borderRadius: 8,
+    backgroundColor: 'white',
+    paddingHorizontal: 12,
+    marginBottom: 16,
+},
+
+buscaInput: { 
+    flex: 1, 
+    fontFamily: 'Manrope_400Regular', 
+    fontSize: 14, 
+    color: '#0B1C30' 
+},
+
+cardTopo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+},
+
+tag: { 
+    paddingHorizontal: 8, 
+    paddingVertical: 3, 
+    borderRadius: 4 
+},
+
+tagTexto: { 
+    fontFamily: 'Manrope_700Bold', 
+    fontSize: 10, 
+    letterSpacing: 0.5 
+},
+
+cardData: { 
+    fontFamily: 'Manrope_400Regular', 
+    fontSize: 12, 
+    color: '#40484B' 
+},
+
+cardNome: { 
+    fontFamily: 'Manrope_700Bold', 
+    fontSize: 16, 
+    color: '#0B1C30', 
+    marginBottom: 8 
+},
+
+cardMedicoLinha: { 
+    flexDirection: 'row', 
+    alignItems: 'center' 
+},
+
+cardMedicoTexto: {
+    fontFamily: 'Manrope_400Regular',
+    fontSize: 13,
+    color: '#40484B',
+    marginLeft: 6,
+    flex: 1,
+},
+
+vazio: { 
+    textAlign: 'center', 
+    color: '#8A9599', 
+    marginTop: 40 
+},
+
+cardCampo: {
+    width: '100%',
+    backgroundColor: 'white',
+    borderWidth: 1,
+    borderColor: '#BFC8CB',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 10,
+},
+
+labelCampo: {
+    fontFamily: 'Manrope_400Regular',
+    fontSize: 11,
+    color: '#40484B',
+    marginBottom: 4,
+},
+
+valorCampo: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 14,
+    color: '#0B1C30',
+    padding: 0,
+},
+
+tituloSecao: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 11,
+    color: '#40484B',
+    marginTop: 8,
+    marginBottom: 8,
+    letterSpacing: 0.5,
+},
+
+linhaPaciente: { 
+    flexDirection: 'row', 
+    alignItems: 'center' 
+},
+
+avatar: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#004D5B',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+},
+
+avatarTexto: { 
+    fontFamily: 'Manrope_700Bold', 
+    fontSize: 11, 
+    color: '#FFFFFF' 
+},
+
+arquivoLinha: { 
+    flexDirection: 'row', 
+    alignItems: 'center' 
+},
+
+arquivoIcone: {
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+    backgroundColor: '#FFDAD6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+},
+
+arquivoNome: { 
+    fontFamily: 'Manrope_700Bold', 
+    fontSize: 13, 
+    color: '#0B1C30' 
+},
+
+arquivoInfo: { 
+    fontFamily: 'Manrope_400Regular', 
+    fontSize: 12, 
+    color: '#6B7280', 
+    marginTop: 2 
+},
+
+botaoVisualizar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: '#006A66',
+    marginTop: 12,
+},
+
+botaoVisualizarTexto: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 13,
+    color: '#FFFFFF',
+    marginLeft: 8,
+},
+
+botaoTrocar: { 
+    alignSelf: 'center', 
+    marginTop: 12 
+},
+
+botaoTrocarTexto: { 
+    fontFamily: 'Manrope_700Bold', 
+    fontSize: 12, 
+    color: '#006A66' 
+},
+
 
 })
 
