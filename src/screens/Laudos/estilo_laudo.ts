@@ -5,7 +5,6 @@ export const estilos = StyleSheet.create({
     container: {
         flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
     width: '100%',
     },
 
@@ -323,6 +322,116 @@ vazio: {
     textAlign: 'center', 
     color: '#8A9599', 
     marginTop: 40 
+},
+
+cardCampo: {
+    width: '100%',
+    backgroundColor: 'white',
+    borderWidth: 1,
+    borderColor: '#BFC8CB',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 10,
+},
+
+labelCampo: {
+    fontFamily: 'Manrope_400Regular',
+    fontSize: 11,
+    color: '#40484B',
+    marginBottom: 4,
+},
+
+valorCampo: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 14,
+    color: '#0B1C30',
+    padding: 0,
+},
+
+tituloSecao: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 11,
+    color: '#40484B',
+    marginTop: 8,
+    marginBottom: 8,
+    letterSpacing: 0.5,
+},
+
+linhaPaciente: { 
+    flexDirection: 'row', 
+    alignItems: 'center' 
+},
+
+avatar: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#004D5B',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+},
+
+avatarTexto: { 
+    fontFamily: 'Manrope_700Bold', 
+    fontSize: 11, 
+    color: '#FFFFFF' 
+},
+
+arquivoLinha: { 
+    flexDirection: 'row', 
+    alignItems: 'center' 
+},
+
+arquivoIcone: {
+    width: 48,
+    height: 48,
+    borderRadius: 8,
+    backgroundColor: '#FFDAD6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+},
+
+arquivoNome: { 
+    fontFamily: 'Manrope_700Bold', 
+    fontSize: 13, 
+    color: '#0B1C30' 
+},
+
+arquivoInfo: { 
+    fontFamily: 'Manrope_400Regular', 
+    fontSize: 12, 
+    color: '#6B7280', 
+    marginTop: 2 
+},
+
+botaoVisualizar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: '#006A66',
+    marginTop: 12,
+},
+
+botaoVisualizarTexto: {
+    fontFamily: 'Manrope_700Bold',
+    fontSize: 13,
+    color: '#FFFFFF',
+    marginLeft: 8,
+},
+
+botaoTrocar: { 
+    alignSelf: 'center', 
+    marginTop: 12 
+},
+
+botaoTrocarTexto: { 
+    fontFamily: 'Manrope_700Bold', 
+    fontSize: 12, 
+    color: '#006A66' 
 },
 
 

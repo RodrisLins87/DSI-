@@ -142,7 +142,7 @@ export default function ListagemLaudosScreen({ navigation }: { navigation: any }
                 <TouchableOpacity
                   style={estilos.MedicalReportBox}
                   activeOpacity={0.8}
-                  onPress={() => abrirArquivo(item)}
+                  onPress={() => navigation.navigate('LaudoEdit', { laudoId: item.id })}
                 >
                   <View style={estilos.cardTopo}>
                     <View style={[estilos.tag, { backgroundColor: cor.bg }]}>

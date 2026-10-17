@@ -12,7 +12,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 type Item = { id: string; nome: string; especialidade?: string};
 
 
-export default function LaudoAddScreen(){
+export default function LaudoAddScreen({ navigation }: {navigation: any}){
 
     useFonts({ Manrope_400Regular, Manrope_700Bold });
 
@@ -92,6 +92,7 @@ async function salvar() {
             criadoEm: serverTimestamp(),
         });
         alert('Laudo salvo com sucesso!');
+        navigation.goBack();
     } catch (erro) {
         console.log(erro);
         alert('Erro ao salvar o laudo.');
@@ -150,7 +151,7 @@ const listaFiltrada = lista.filter((i) =>
     return (
         <View style={estilos.container}>
             <View style={estilos.header}>
-                <TouchableOpacity >
+                <TouchableOpacity onPress={() => navigation.goBack()}>
                     <Ionicons name="arrow-back" size={24} color='#40484B' />
                 </TouchableOpacity>
                 <Text style={estilos.headerTitle}>Novo Laudo/Exame</Text>
