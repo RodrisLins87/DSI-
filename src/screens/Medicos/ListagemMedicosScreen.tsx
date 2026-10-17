@@ -165,6 +165,14 @@ export default function ListagemMedicosScreen() {
               </View>
 
               <TouchableOpacity
+                style={styles.calendarIconButton}
+                activeOpacity={0.6}
+                onPress={() => navigation.navigate('GerenciarAgenda', { medicoId: item.id })}
+              >
+                <Ionicons name="calendar-outline" size={22} color="#006A66" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
                 style={styles.deleteIconButton}
                 activeOpacity={0.6}
                 onPress={() => setMedicoParaExcluir(item)}
@@ -242,6 +250,10 @@ const styles = StyleSheet.create({
   cardTitle: { fontSize: 16, fontWeight: 'bold', color: '#1A2E35' },
   cardSubtitle: { color: '#5B6B70', marginTop: 2 },
   cardCrm: { color: '#8A9599', marginTop: 2, fontSize: 12 },
+  calendarIconButton: {
+    padding: 8,
+    marginRight: 4,
+  },
   deleteIconButton: {
     padding: 8,
     marginRight: 4,

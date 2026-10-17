@@ -11,7 +11,7 @@ import MapaFaltasResumo from './components/MapaFaltasResumo';
 
 interface Contadores {
   pacientes: number;
-  dependentes: number;
+  responsaveis: number;
   medicos: number;
   laudos: number;
   consultasHoje: number;
@@ -22,7 +22,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
   const [nomeClinica, setNomeClinica] = useState<string>('Clínica');
   const [contadores, setContadores] = useState<Contadores>({
     pacientes: 0,
-    dependentes: 0,
+    responsaveis: 0,
     medicos: 0,
     laudos: 0,
     consultasHoje: 0,
@@ -54,16 +54,16 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
         // OBS: isso pressupõe que cada documento em 'pacientes', 'dependentes' etc.
         // tem um campo 'clinicaId' salvo. Ajuste o nome do campo se o time
         // combinou outro nome.
-        const [pacientesSnap, dependentesSnap, medicosSnap, laudosSnap] = await Promise.all([
+        const [pacientesSnap, responsaveisSnap, medicosSnap, laudosSnap] = await Promise.all([
           getCountFromServer(query(collection(db, 'pacientes'), where('clinicaId', '==', clinicaId))),
-          getCountFromServer(query(collection(db, 'dependentes'), where('clinicaId', '==', clinicaId))),
+          getCountFromServer(query(collection(db, 'responsaveis'), where('clinicaId', '==', clinicaId))),
           getCountFromServer(query(collection(db, 'medicos'), where('clinicaId', '==', clinicaId))),
           getCountFromServer(query(collection(db, 'laudos'), where('clinicaId', '==', clinicaId))),
         ]);
 
         setContadores({
           pacientes: pacientesSnap.data().count,
-          dependentes: dependentesSnap.data().count,
+          responsaveis: responsaveisSnap.data().count,
           medicos: medicosSnap.data().count,
           laudos: laudosSnap.data().count,
           consultasHoje: 0, // TODO: somar quando a coleção 'consultas' existir com campo de data
@@ -113,29 +113,34 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
         </View>
       </View>
 
-
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <ResumoClinica />
         <MapaFaltasResumo />
 
         {/* Card grande: Pacientes */}
-        <View style={styles.cardFull}>
+        <TouchableOpacity
+          style={styles.cardFull}
+          onPress={() => navigation.navigate('Pacientes')}
+        >
           <View style={[styles.iconCircle, { backgroundColor: '#0E3D3A' }]}>
             <Ionicons name="person" size={20} color="#FFFFFF" />
           </View>
           <Text style={styles.cardLabel}>Pacientes</Text>
           <Text style={styles.cardValue}>{contadores.pacientes.toLocaleString('pt-BR')}</Text>
-        </View>
+        </TouchableOpacity>
 
         {/* Linha com dois cards menores */}
         <View style={styles.row}>
-          <View style={styles.cardHalf}>
-            <View style={[styles.iconCircle, { backgroundColor: '#3FD9C4' }]}>
-              <Ionicons name="people" size={20} color="#FFFFFF" />
-            </View>
-            <Text style={styles.cardLabel}>Dependentes</Text>
-            <Text style={styles.cardValue}>{contadores.dependentes.toLocaleString('pt-BR')}</Text>
-          </View>
+          <TouchableOpacity
+            style={styles.cardHalf}
+            onPress={() => navigation.navigate('ListagemResponsaveis')}
+  >
+          <View style={[styles.iconCircle, { backgroundColor: '#3FD9C4' }]}>
+        <Ionicons name="people" size={20} color="#FFFFFF" />
+        </View>
+        <Text style={styles.cardLabel}>Responsáveis</Text>
+        <Text style={styles.cardValue}>{contadores.responsaveis.toLocaleString('pt-BR')}</Text>
+        </TouchableOpacity>
 
           <TouchableOpacity 
             style={styles.cardHalf}
