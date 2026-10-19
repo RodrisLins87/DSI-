@@ -14,6 +14,7 @@ interface Contadores {
   responsaveis: number;
   medicos: number;
   laudos: number;
+  laudosComArquivo: number;
   consultasHoje: number;
 }
 
@@ -25,6 +26,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
     responsaveis: 0,
     medicos: 0,
     laudos: 0,
+    laudosComArquivo: 0,
     consultasHoje: 0,
   });
   const [loading, setLoading] = useState<boolean>(true);
@@ -54,11 +56,14 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
         // OBS: isso pressupõe que cada documento em 'pacientes', 'dependentes' etc.
         // tem um campo 'clinicaId' salvo. Ajuste o nome do campo se o time
         // combinou outro nome.
-        const [pacientesSnap, responsaveisSnap, medicosSnap, laudosSnap] = await Promise.all([
+        // Os laudos ficam em clinicas/{clinicaId}/laudos (é onde a LaudoAddScreen salva)
+        const laudosRef = collection(db, 'clinicas', clinicaId, 'laudos');
+        const [pacientesSnap, responsaveisSnap, medicosSnap, laudosSnap, laudosComArquivoSnap] = await Promise.all([
           getCountFromServer(query(collection(db, 'pacientes'), where('clinicaId', '==', clinicaId))),
           getCountFromServer(query(collection(db, 'responsaveis'), where('clinicaId', '==', clinicaId))),
           getCountFromServer(query(collection(db, 'medicos'), where('clinicaId', '==', clinicaId))),
-          getCountFromServer(query(collection(db, 'laudos'), where('clinicaId', '==', clinicaId))),
+          getCountFromServer(laudosRef),
+          getCountFromServer(query(laudosRef, where('arquivoUrl', '!=', null))),
         ]);
 
         setContadores({
@@ -66,6 +71,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
           responsaveis: responsaveisSnap.data().count,
           medicos: medicosSnap.data().count,
           laudos: laudosSnap.data().count,
+          laudosComArquivo: laudosComArquivoSnap.data().count,
           consultasHoje: 0, // TODO: somar quando a coleção 'consultas' existir com campo de data
         });
       } catch (error) {
@@ -79,6 +85,10 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
 
     carregarDados();
   }, []);
+
+  // % dos laudos que já têm o arquivo do exame anexado
+  const pctComArquivo =
+    contadores.laudos > 0 ? Math.round((contadores.laudosComArquivo / contadores.laudos) * 100) : 0;
 
   return (
     <View style={styles.container}>
@@ -164,9 +174,13 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
           <Text style={styles.cardLabel}>Laudos/Exames</Text>
           <Text style={styles.cardValue}>{contadores.laudos}</Text>
           <View style={styles.progressBarBg}>
-            <View style={[styles.progressBarFill, { width: '75%' }]} />
+            <View style={[styles.progressBarFill, { width: `${pctComArquivo}%` }]} />
           </View>
-          <Text style={styles.progressText}>75% processados hoje</Text>
+          <Text style={styles.progressText}>
+            {contadores.laudos > 0
+              ? `${pctComArquivo}% com arquivo anexado`
+              : 'Nenhum laudo cadastrado'}
+          </Text>
         </TouchableOpacity>
 
         {/* Card escuro: Consultas do Dia */}
