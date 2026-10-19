@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,13 +8,18 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
+  Animated,
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
+import { Swipeable } from 'react-native-gesture-handler';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { auth, db } from '../../lib/firebase';
 import { getInitials } from '../../utils/masks';
 import ConfirmDeleteModal from '../../utils/ConfirmDeleteModal';
+import BarraNavegacao from '../../utils/BarraNavegacao';
+import { FONT } from '../../global/fonts';
 
 interface Medico {
   id: string;
@@ -28,8 +33,40 @@ interface Medico {
 const normalizar = (s: string): string =>
   s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
+// Arrastar o card para a esquerda mostra a lixeira (mesmo esquema da ListagemConsultasScreen)
+function CartaoArrastavel({ children, onExcluir }: { children: React.ReactNode; onExcluir: () => void }) {
+  const ref = useRef<Swipeable>(null);
+
+  function renderAcao(progress: Animated.AnimatedInterpolation<number>) {
+    const translateX = progress.interpolate({ inputRange: [0, 1], outputRange: [72, 0] });
+    return (
+      <TouchableOpacity
+        style={styles.acaoExcluir}
+        activeOpacity={0.85}
+        onPress={() => {
+          ref.current?.close();
+          onExcluir();
+        }}
+      >
+        <Animated.View style={{ transform: [{ translateX }] }}>
+          <Ionicons name="trash-outline" size={24} color="#FFFFFF" />
+        </Animated.View>
+      </TouchableOpacity>
+    );
+  }
+
+  return (
+    <View style={styles.espacoEntreCards}>
+      <Swipeable ref={ref} renderRightActions={renderAcao} overshootRight={false} rightThreshold={40}>
+        {children}
+      </Swipeable>
+    </View>
+  );
+}
+
 export default function ListagemMedicosScreen() {
   const navigation = useNavigation<any>();
+  const insets = useSafeAreaInsets();
 
   const [medicos, setMedicos] = useState<Medico[]>([]);
   const [busca, setBusca] = useState<string>('');
@@ -121,8 +158,18 @@ export default function ListagemMedicosScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Médicos</Text>
+      {/* Cabeçalho */}
+      <View style={[styles.header, { paddingTop: insets.top }]}>
+        <View style={styles.headerLinha}>
+          <Text style={styles.title}>Médicos</Text>
+          <TouchableOpacity
+            style={styles.addButton}
+            activeOpacity={0.85}
+            onPress={() => navigation.navigate('FormularioMedico')}
+          >
+            <MaterialIcons name="add" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={styles.searchBox}>
@@ -142,46 +189,40 @@ export default function ListagemMedicosScreen() {
         <FlatList
           data={filtrados}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingBottom: 100 }}
+          contentContainerStyle={styles.lista}
           refreshing={refreshing}
           onRefresh={() => {
             setRefreshing(true);
             fetchMedicos();
           }}
           renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.card}
-              activeOpacity={0.7}
-              onPress={() => navigation.navigate('FormularioMedico', { medicoId: item.id })}
-            >
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>{getInitials(item.nome)}</Text>
-              </View>
-
-              <View style={styles.cardInfo}>
-                <Text style={styles.cardTitle}>{item.nome}</Text>
-                <Text style={styles.cardSubtitle}>{item.especialidade}</Text>
-                <Text style={styles.cardCrm}>{item.crm}</Text>
-              </View>
-
+            <CartaoArrastavel onExcluir={() => setMedicoParaExcluir(item)}>
               <TouchableOpacity
-                style={styles.calendarIconButton}
-                activeOpacity={0.6}
-                onPress={() => navigation.navigate('GerenciarAgenda', { medicoId: item.id })}
+                style={styles.card}
+                activeOpacity={0.7}
+                onPress={() => navigation.navigate('FormularioMedico', { medicoId: item.id })}
               >
-                <Ionicons name="calendar-outline" size={22} color="#006A66" />
-              </TouchableOpacity>
+                <View style={styles.avatar}>
+                  <Text style={styles.avatarText}>{getInitials(item.nome)}</Text>
+                </View>
 
-              <TouchableOpacity
-                style={styles.deleteIconButton}
-                activeOpacity={0.6}
-                onPress={() => setMedicoParaExcluir(item)}
-              >
-                <Ionicons name="trash-outline" size={20} color="#BA1A1A" />
-              </TouchableOpacity>
+                <View style={styles.cardInfo}>
+                  <Text style={styles.cardTitle}>{item.nome}</Text>
+                  <Text style={styles.cardSubtitle}>{item.especialidade}</Text>
+                  <Text style={styles.cardCrm}>{item.crm}</Text>
+                </View>
 
-              <Ionicons name="chevron-forward" size={20} color="#8A9599" />
-            </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.calendarIconButton}
+                  activeOpacity={0.6}
+                  onPress={() => navigation.navigate('GerenciarAgenda', { medicoId: item.id })}
+                >
+                  <Ionicons name="calendar-outline" size={22} color="#006A66" />
+                </TouchableOpacity>
+
+                <Ionicons name="chevron-forward" size={20} color="#8A9599" />
+              </TouchableOpacity>
+            </CartaoArrastavel>
           )}
           ListEmptyComponent={
             <Text style={styles.empty}>
@@ -191,14 +232,7 @@ export default function ListagemMedicosScreen() {
         />
       )}
 
-      <TouchableOpacity
-        style={styles.fab}
-        activeOpacity={0.85}
-        onPress={() => navigation.navigate('FormularioMedico')}
-      >
-        <Ionicons name="add" size={22} color="#FFFFFF" />
-        <Text style={styles.fabText}>Adicionar Médico</Text>
-      </TouchableOpacity>
+      <BarraNavegacao ativa="inicio" />
 
       <ConfirmDeleteModal
         visible={medicoParaExcluir !== null}
@@ -213,9 +247,35 @@ export default function ListagemMedicosScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, paddingTop: 60, backgroundColor: '#F8F9FF' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  title: { fontSize: 24, fontWeight: 'bold', color: '#1A2E35' },
+  container: { flex: 1, backgroundColor: '#F8F9FF' },
+  // cabeçalho igual ao da ListagemConsultasScreen
+  header: {
+    backgroundColor: '#F8F9FF',
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 1,
+    zIndex: 1,
+  },
+  headerLinha: {
+    height: 76,
+    paddingTop: 16,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  title: { fontFamily: FONT.semibold, fontSize: 24, lineHeight: 32, color: '#00353F' },
+  addButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    backgroundColor: '#006A66',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  lista: { paddingHorizontal: 20, paddingBottom: 24 },
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -224,6 +284,8 @@ const styles = StyleSheet.create({
     borderColor: '#DDE3E6',
     borderRadius: 12,
     paddingHorizontal: 12,
+    marginHorizontal: 20,
+    marginTop: 16,
     marginBottom: 14,
   },
   searchIcon: { marginRight: 8 },
@@ -234,8 +296,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 12,
     padding: 16,
-    marginBottom: 10,
   },
+  espacoEntreCards: { marginBottom: 10 },
   avatar: {
     width: 44,
     height: 44,
@@ -254,26 +316,13 @@ const styles = StyleSheet.create({
     padding: 8,
     marginRight: 4,
   },
-  deleteIconButton: {
-    padding: 8,
-    marginRight: 4,
+  acaoExcluir: {
+    width: 72,
+    marginLeft: 8,
+    borderRadius: 12,
+    backgroundColor: '#BA1A1A',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   empty: { textAlign: 'center', color: '#8A9599', marginTop: 40 },
-  fab: {
-    position: 'absolute',
-    right: 20,
-    bottom: 30,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#0F4C4A',
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 28,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
-  },
-  fabText: { color: '#fff', fontWeight: '600', marginLeft: 6 },
 });
