@@ -5,6 +5,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { collection, query, orderBy, getDocs, deleteDoc, doc, Timestamp } from 'firebase/firestore';
 import { ref, deleteObject } from 'firebase/storage';
 import { auth, db, storage } from '../../lib/firebase';
+import { urlDoArquivo, apagarArquivo } from '../../lib/supabase';
 import SwipeableRow from '../../utils/SwipeableRow';
 import ConfirmDeleteModal from '../../utils/ConfirmDeleteModal';
 import BarraNavegacao from '../../utils/BarraNavegacao';
@@ -20,6 +21,7 @@ interface Laudo {
   criadoEm?: Timestamp;
   arquivoUrl: string | null;
   arquivoCaminho: string | null;
+  arquivoStorage?: string | null;
 }
 
 const MESES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
@@ -82,9 +84,19 @@ export default function ListagemLaudosScreen({ navigation }: { navigation: any }
       normalizar(l.medicoNome ?? '').includes(termo),
   );
 
-  function abrirArquivo(l: Laudo) {
-    if (l.arquivoUrl) Linking.openURL(l.arquivoUrl);
-    else Alert.alert('Sem anexo', 'Este laudo não possui arquivo anexado.');
+  async function abrirArquivo(l: Laudo) {
+    try {
+      if (l.arquivoStorage === 'supabase' && l.arquivoCaminho) {
+        await Linking.openURL(await urlDoArquivo(l.arquivoCaminho));
+      } else if (l.arquivoUrl) {
+        await Linking.openURL(l.arquivoUrl);
+      } else {
+        Alert.alert('Sem anexo', 'Este laudo não possui arquivo anexado.');
+      }
+    } catch (erro) {
+      console.log(erro);
+      Alert.alert('Erro', 'Não foi possível abrir o arquivo. Verifique sua conexão e tente novamente.');
+    }
   }
 
   async function confirmarExclusao(): Promise<void> {
@@ -92,8 +104,17 @@ export default function ListagemLaudosScreen({ navigation }: { navigation: any }
     if (!laudoParaExcluir || !clinicaId) return;
     setExcluindo(true);
     try {
+      // Se apagar o arquivo falhar, o laudo é excluído mesmo assim para não ficar preso na lista
       if (laudoParaExcluir.arquivoCaminho) {
-        await deleteObject(ref(storage, laudoParaExcluir.arquivoCaminho));
+        try {
+          if (laudoParaExcluir.arquivoStorage === 'supabase') {
+            await apagarArquivo(laudoParaExcluir.arquivoCaminho);
+          } else {
+            await deleteObject(ref(storage, laudoParaExcluir.arquivoCaminho));
+          }
+        } catch (e) {
+          console.log('Não foi possível apagar o arquivo do laudo', e);
+        }
       }
       await deleteDoc(doc(db, 'clinicas', clinicaId, 'laudos', laudoParaExcluir.id));
       setLaudos((atuais) => atuais.filter((l) => l.id !== laudoParaExcluir.id));
