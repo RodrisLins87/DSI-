@@ -13,6 +13,8 @@ import { Ionicons, Feather } from '@expo/vector-icons';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, db } from '../../lib/firebase';
 import { DIAS_SEMANA, horaParaMinutos } from '../../utils/disponibilidadeUtils';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { FONT } from '../../global/fonts';
 
 interface IntervaloDisponibilidade {
   id: string;
@@ -46,6 +48,7 @@ interface SlotAgenda {
 export default function AgendaMedicoScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
+  const insets = useSafeAreaInsets();
   const medicoId: string = route.params?.medicoId;
 
   const [medico, setMedico] = useState<Medico | null>(null);
@@ -170,12 +173,14 @@ export default function AgendaMedicoScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="#1A2E35" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Agenda do Médico</Text>
-        <View style={{ width: 24 }} />
+      <View style={[styles.header, { paddingTop: insets.top }]}>
+        <View style={styles.headerLinha}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+           <Ionicons name="arrow-back" size={24} color="#00353F" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Agenda do Médico</Text>
+          <View style={styles.backBtn} />
+        </View>
       </View>
 
       <View style={styles.medicoCard}>
@@ -208,7 +213,7 @@ export default function AgendaMedicoScreen() {
             <ActivityIndicator size="small" color="#006A66" style={{ marginVertical: 20 }} />
           ) : disponibilidadeDoDia.length === 0 ? (
             <View style={styles.emptyBox}>
-              <Feather name="coffee" size={28} color="#8A9599" />
+              <Feather name="coffee" size={28} color="#70787B" />
               <Text style={styles.emptyText}>
                 O profissional não possui horário de atendimento cadastrado para este dia da semana.
               </Text>
@@ -225,13 +230,13 @@ export default function AgendaMedicoScreen() {
                 <View
                   style={[
                     styles.horaBadge,
-                    { backgroundColor: slot.ocupado ? '#00353F' : '#E0F5F1' },
+                    { backgroundColor: slot.ocupado ? '#00353F' : '#E6F4F1' },
                   ]}
                 >
                   <Text
                     style={[
                       styles.horaBadgeText,
-                      { color: slot.ocupado ? '#FFFFFF' : '#00695C' },
+                      { color: slot.ocupado ? '#FFFFFF' : '#006A66'},
                     ]}
                   >
                     {slot.hora}
@@ -282,28 +287,43 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8F9FF' },
   center: { justifyContent: 'center', alignItems: 'center' },
 
+  // cabeçalho (igual ao das listagens)
   header: {
+    backgroundColor: '#F8F9FF',
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 1,
+    zIndex: 1,
+  },
+  headerLinha: {
+    height: 76,
+    paddingTop: 16,
+    paddingHorizontal: 20,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 50,
-    paddingBottom: 12,
-    backgroundColor: '#F8F9FF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E3E8F0',
   },
-  headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#006A66' },
+  backBtn: { width: 44, height: 44, alignItems: 'flex-start', justifyContent: 'center' },
+  headerTitle: { fontFamily: FONT.semibold, fontSize: 24, lineHeight: 32, color: '#00353F' },
 
   medicoCard: {
-    backgroundColor: '#0F4C4A',
-    padding: 18,
+    backgroundColor: '#00353F',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
     marginHorizontal: 20,
     marginTop: 16,
-    borderRadius: 14,
+    borderRadius: 8,
   },
-  medicoNome: { color: '#FFFFFF', fontSize: 18, fontWeight: 'bold' },
-  medicoEspecialidade: { color: '#B3E5FC', fontSize: 13, marginTop: 4 },
+  medicoNome: { fontFamily: FONT.semibold, fontSize: 20, lineHeight: 28, color: '#FFFFFF' },
+  medicoEspecialidade: {
+    fontFamily: FONT.regular,
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#DEE3E4',
+    marginTop: 2,
+  },
 
   dateSelector: {
     flexDirection: 'row',
@@ -311,65 +331,77 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: '#FFFFFF',
     marginHorizontal: 20,
-    marginTop: 12,
+    marginTop: 16,
     paddingVertical: 10,
     paddingHorizontal: 16,
-    borderRadius: 12,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E3E8F0',
+    borderColor: '#BFC8CB',
   },
   arrowBtn: { padding: 6 },
-  dateText: { fontSize: 16, fontWeight: 'bold', color: '#1A2E35' },
-  dayOfWeekText: { fontSize: 12, color: '#8A9599', marginTop: 2 },
+  dateText: { fontFamily: FONT.semibold, fontSize: 16, lineHeight: 24, color: '#0B1C30' },
+  dayOfWeekText: { fontFamily: FONT.regular, fontSize: 14, lineHeight: 20, color: '#40484B' },
 
-  scroll: { padding: 20 },
+  scroll: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 24 },
 
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
+    borderRadius: 8,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#E3E8F0',
+    borderColor: '#BFC8CB',
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 1,
   },
-  cardTitle: { fontSize: 15, fontWeight: 'bold', color: '#0F4C4A', marginBottom: 14 },
+  cardTitle: {
+    fontFamily: FONT.semibold,
+    fontSize: 20,
+    lineHeight: 28,
+    color: '#0B1C30',
+    marginBottom: 12,
+  },
 
   emptyBox: { alignItems: 'center', paddingVertical: 20 },
-  emptyText: { color: '#8A9599', fontSize: 13, marginTop: 10, textAlign: 'center', paddingHorizontal: 10 },
+  emptyText: {
+    fontFamily: FONT.regular,
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#70787B',
+    marginTop: 10,
+    textAlign: 'center',
+    paddingHorizontal: 10,
+  },
 
   slotRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 12,
     paddingHorizontal: 12,
     borderRadius: 8,
     marginBottom: 8,
     borderWidth: 1,
+    borderColor: '#DEE3E4',
   },
-  slotLivreRow: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E3E8F0',
-  },
-  slotOcupadoRow: {
-    backgroundColor: '#FBFCFD',
-    borderColor: '#DDE3E6',
-  },
+  slotLivreRow: { backgroundColor: '#FFFFFF' },
+  slotOcupadoRow: { backgroundColor: '#F8F9FF' },
 
   horaBadge: {
+    height: 28,
     paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 6,
+    borderRadius: 14,
+    justifyContent: 'center',
   },
-  horaBadgeText: { fontWeight: 'bold', fontSize: 13 },
+  horaBadgeText: { fontFamily: FONT.semibold, fontSize: 14 },
 
-  pacienteText: { fontSize: 14, fontWeight: '700', color: '#1A2E35' },
-  statusText: { fontSize: 12, color: '#5B6B70', marginTop: 2 },
-  livreText: { fontSize: 13, color: '#00695C', fontWeight: '600' },
+  pacienteText: { fontFamily: FONT.semibold, fontSize: 16, lineHeight: 24, color: '#0B1C30' },
+  statusText: { fontFamily: FONT.regular, fontSize: 14, lineHeight: 20, color: '#40484B' },
+  livreText: { fontFamily: FONT.semibold, fontSize: 14, lineHeight: 20, color: '#006A66' },
 
-  statusTag: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  statusTagText: { fontSize: 11, fontWeight: 'bold' },
+  // badge (mesmo padrão do status da consulta)
+  statusTag: { height: 24, paddingHorizontal: 8, borderRadius: 12, justifyContent: 'center' },
+  statusTagText: { fontFamily: FONT.semibold, fontSize: 12, letterSpacing: 0.5 },
 });
