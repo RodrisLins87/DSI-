@@ -12,6 +12,8 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons, Feather } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { FONT } from '../../global/fonts';
 import { doc, getDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, db } from '../../lib/firebase';
 import {
@@ -188,6 +190,7 @@ function validarAgenda(agenda: Record<number, DiaConfig>): string | null {
 export default function GerenciarAgendaScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
+  const insets = useSafeAreaInsets();
   const medicoId: string = route.params?.medicoId;
 
   const [loading, setLoading] = useState<boolean>(true);
@@ -338,13 +341,15 @@ export default function GerenciarAgendaScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+      <View style={[styles.header, { paddingTop: insets.top }]}>
+       <View style={styles.headerLinha}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="#00353F" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Gerenciar Agenda</Text>
-        <View style={{ width: 24 }} />
+        <View style={styles.backBtn} />
       </View>
+    </View>
 
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <Text style={styles.subtitle}>
@@ -388,7 +393,7 @@ export default function GerenciarAgendaScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.inputLabel}>Início do Expediente</Text>
                   <View style={styles.inputBox}>
-                    <Feather name="clock" size={16} color="#5B6B70" />
+                    <Feather name="clock" size={18} color="#70787B" />
                     <TextInput
                       style={styles.inputText}
                       value={configAtual.inicioExpediente}
@@ -403,7 +408,7 @@ export default function GerenciarAgendaScreen() {
                 <View style={{ flex: 1 }}>
                   <Text style={styles.inputLabel}>Fim do Expediente</Text>
                   <View style={styles.inputBox}>
-                    <Feather name="clock" size={16} color="#5B6B70" />
+                    <Feather name="clock" size={18} color="#70787B" />
                     <TextInput
                       style={styles.inputText}
                       value={configAtual.fimExpediente}
@@ -430,11 +435,11 @@ export default function GerenciarAgendaScreen() {
                 </View>
               ))}
 
-              <View style={{ flexDirection: 'row', gap: 10, marginTop: 10, alignItems: 'center' }}>
+              <View style={{ flexDirection: 'row', gap: 12, marginTop: 10, alignItems: 'center' }}>
                 <TextInput
                   style={styles.pausaInput}
                   placeholder="Início (12:00)"
-                  placeholderTextColor="#8A9599"
+                  placeholderTextColor="#6B7280"
                   value={novoInicioPausa}
                   onChangeText={setNovoInicioPausa}
                   maxLength={5}
@@ -443,7 +448,7 @@ export default function GerenciarAgendaScreen() {
                 <TextInput
                   style={styles.pausaInput}
                   placeholder="Fim (13:00)"
-                  placeholderTextColor="#8A9599"
+                  placeholderTextColor="#6B7280"
                   value={novoFimPausa}
                   onChangeText={setNovoFimPausa}
                   maxLength={5}
@@ -478,41 +483,69 @@ export default function GerenciarAgendaScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8F9FF' },
   center: { justifyContent: 'center', alignItems: 'center' },
+
+  // cabeçalho (igual ao das listagens)
   header: {
+    backgroundColor: '#F8F9FF',
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 1,
+    zIndex: 1,
+  },
+  headerLinha: {
+    height: 76,
+    paddingTop: 16,
+    paddingHorizontal: 20,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 50,
-    paddingBottom: 14,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E3E8F0',
   },
-  headerTitle: { fontSize: 18, fontWeight: '700', color: '#00353F' },
-  scroll: { padding: 20 },
-  subtitle: { fontSize: 14, color: '#5B6B70', marginBottom: 20 },
-  sectionLabel: { fontSize: 12, fontWeight: '700', color: '#1A2E35', marginBottom: 10 },
+  backBtn: { width: 44, height: 44, alignItems: 'flex-start', justifyContent: 'center' },
+  headerTitle: { fontFamily: FONT.semibold, fontSize: 24, lineHeight: 32, color: '#00353F' },
+
+  scroll: { paddingHorizontal: 20, paddingTop: 17, paddingBottom: 28 },
+  subtitle: {
+    fontFamily: FONT.regular,
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#40484B',
+    marginBottom: 20,
+  },
+  sectionLabel: {
+    fontFamily: FONT.semibold,
+    fontSize: 12,
+    letterSpacing: 0.5,
+    color: '#40484B',
+    marginBottom: 10,
+  },
+
   daysRow: { flexDirection: 'row', gap: 8, marginBottom: 20 },
   dayChip: {
     flex: 1,
     paddingVertical: 10,
-    borderRadius: 20,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: '#BFC8CB',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
   },
-  dayChipSelected: { backgroundColor: '#004D5B', borderColor: '#004D5B' },
-  dayChipText: { fontSize: 13, color: '#1A2E35', fontWeight: '600' },
+  dayChipSelected: { backgroundColor: '#006A66', borderColor: '#006A66' },
+  dayChipText: { fontFamily: FONT.semibold, fontSize: 14, color: '#0B1C30' },
   dayChipTextSelected: { color: '#FFFFFF' },
 
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    borderRadius: 8,
     padding: 16,
     borderWidth: 1,
     borderColor: '#BFC8CB',
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 1,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -520,35 +553,42 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F3F4',
+    borderBottomColor: '#DEE3E4',
   },
-  dayTitle: { fontSize: 16, fontWeight: '700', color: '#00353F' },
+  dayTitle: { fontFamily: FONT.semibold, fontSize: 20, lineHeight: 28, color: '#0B1C30' },
   switchRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  switchLabel: { fontSize: 14, color: '#5B6B70' },
+  switchLabel: { fontFamily: FONT.regular, fontSize: 14, color: '#40484B' },
 
-  inputLabel: { fontSize: 13, color: '#1A2E35', fontWeight: '600', marginBottom: 6 },
+  inputLabel: {
+    fontFamily: FONT.semibold,
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#0B1C30',
+    marginBottom: 6,
+  },
   inputBox: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#BFC8CB',
     borderRadius: 8,
-    paddingHorizontal: 10,
-    height: 44,
+    paddingHorizontal: 12,
+    height: 50,
     backgroundColor: '#FFFFFF',
     gap: 8,
   },
-  inputText: { flex: 1, fontSize: 14, color: '#1A2E35' },
+  inputText: { flex: 1, fontFamily: FONT.regular, fontSize: 16, color: '#0B1C30' },
   pausaInput: {
     flex: 1,
     borderWidth: 1,
     borderColor: '#BFC8CB',
     borderRadius: 8,
-    paddingHorizontal: 10,
-    height: 44,
+    paddingHorizontal: 12,
+    height: 50,
     backgroundColor: '#FFFFFF',
-    fontSize: 14,
-    color: '#1A2E35',
+    fontFamily: FONT.regular,
+    fontSize: 16,
+    color: '#0B1C30',
   },
 
   intervaloRow: {
@@ -559,31 +599,32 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E3E8F0',
-    marginBottom: 6,
+    borderColor: '#DEE3E4',
+    marginBottom: 8,
   },
-  intervaloText: { fontSize: 14, fontWeight: '600', color: '#1A2E35' },
+  intervaloText: { fontFamily: FONT.semibold, fontSize: 14, color: '#0B1C30' },
   addBtn: {
     backgroundColor: '#006A66',
-    width: 44,
-    height: 44,
+    width: 50,
+    height: 50,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
 
+  // rodapé e botão (igual ao do Formulário)
   footer: {
     padding: 16,
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: '#E3E8F0',
+    borderTopColor: '#DEE3E4',
   },
   saveBtn: {
-    backgroundColor: '#004D5B',
-    height: 50,
-    borderRadius: 10,
+    backgroundColor: '#006A66',
+    height: 48,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  saveBtnText: { color: '#FFFFFF', fontWeight: '700', fontSize: 14, letterSpacing: 0.5 },
+  saveBtnText: { fontFamily: FONT.semibold, fontSize: 14, color: '#FFFFFF' },
 });

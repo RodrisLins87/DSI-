@@ -18,6 +18,8 @@ import { doc, getDoc, setDoc, updateDoc, collection } from 'firebase/firestore';
 import { auth, db } from '../../lib/firebase';
 import { maskDate, maskCPF, maskPhone, isValidDate, isValidEmail } from '../../utils/masks';
 import { ESPECIALIDADES } from '../../utils/especialidades';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { FONT } from '../../global/fonts';
 
 interface FormData {
   nome: string;
@@ -68,6 +70,7 @@ function validate(f: FormData): Errors {
 export default function FormularioMedicoScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
+  const insets = useSafeAreaInsets();
   const medicoId: string | undefined = route.params?.medicoId;
   const isEditMode = !!medicoId;
 
@@ -208,16 +211,17 @@ export default function FormularioMedicoScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color="#00353F" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>
-          {isEditMode ? 'Perfil do Médico' : 'Cadastrar Médico'}
-        </Text>
-        <View style={{ width: 24 }} />
+      <View style={[styles.header, { paddingTop: insets.top }]}>
+        <View style={styles.headerLinha}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+            <Ionicons name="arrow-back" size={24} color="#00353F" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>
+            {isEditMode ? 'Perfil do Médico' : 'Cadastrar Médico'}
+          </Text>
+          <View style={styles.backBtn} />
+        </View>
       </View>
-
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         {/* INFORMAÇÕES PESSOAIS */}
         <View style={styles.card}>
@@ -298,10 +302,10 @@ export default function FormularioMedicoScreen() {
             onPress={() => editing && setPickerVisible(true)}
             disabled={!editing}
           >
-            <Text style={[styles.inputText, !form.especialidade && { color: '#8A9599' }]}>
+            <Text style={[styles.inputText, !form.especialidade && { color: '#6B7280' }]}>
               {form.especialidade || 'Selecione uma especialidade'}
             </Text>
-            <Feather name="chevron-down" size={18} color="#1A2E35" />
+            <Feather name="chevron-down" size={20} color="#70787B" />
           </TouchableOpacity>
           {!!err('especialidade') && <Text style={styles.errorText}>{err('especialidade')}</Text>}
 
@@ -338,7 +342,7 @@ export default function FormularioMedicoScreen() {
             <Text style={styles.primaryButtonText}>EDITAR CADASTRO</Text>
           </TouchableOpacity>
         ) : (
-          <View style={{ flexDirection: 'row', gap: 10 }}>
+          <View style={{ flexDirection: 'row', gap: 12 }}>
             {isEditMode && (
               <TouchableOpacity style={styles.cancelButton} onPress={cancelEditing}>
                 <Text style={styles.cancelButtonText}>CANCELAR</Text>
@@ -419,7 +423,7 @@ function Field({
         <TextInput
           style={styles.input}
           placeholder={placeholder}
-          placeholderTextColor="#8A9599"
+          placeholderTextColor="#6B7280"
           value={value}
           onChangeText={onChangeText}
           onBlur={onBlur}
@@ -437,31 +441,59 @@ function Field({
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8F9FF' },
   center: { justifyContent: 'center', alignItems: 'center' },
+
+  // cabeçalho (igual ao das listagens)
   header: {
+    backgroundColor: '#F8F9FF',
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 1,
+    zIndex: 1,
+  },
+  headerLinha: {
+    height: 76,
+    paddingTop: 16,
+    paddingHorizontal: 20,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 50,
-    paddingBottom: 14,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E3E8F0',
   },
-  backBtn: { padding: 4 },
-  headerTitle: { fontSize: 18, fontWeight: '700', color: '#00353F' },
-  scroll: { padding: 20, paddingBottom: 30 },
+  backBtn: { width: 44, height: 44, alignItems: 'flex-start', justifyContent: 'center' },
+  headerTitle: { fontFamily: FONT.semibold, fontSize: 24, lineHeight: 32, color: '#00353F' },
+
+  scroll: { paddingHorizontal: 20, paddingTop: 17, paddingBottom: 28 },
+
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    borderRadius: 8,
     padding: 16,
     marginBottom: 16,
     borderWidth: 1,
     borderColor: '#BFC8CB',
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 1,
   },
-  cardTitle: { fontSize: 16, fontWeight: '700', color: '#00353F', marginBottom: 14 },
+  cardTitle: {
+    fontFamily: FONT.semibold,
+    fontSize: 20,
+    lineHeight: 28,
+    color: '#0B1C30',
+    marginBottom: 12,
+  },
+
   fieldContainer: { marginBottom: 12 },
-  label: { fontSize: 13, fontWeight: '600', color: '#1A2E35', marginBottom: 6 },
+  label: {
+    fontFamily: FONT.semibold,
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#0B1C30',
+    marginBottom: 6,
+  },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -470,49 +502,61 @@ const styles = StyleSheet.create({
     borderColor: '#BFC8CB',
     borderRadius: 8,
     paddingHorizontal: 12,
-    height: 48,
+    height: 50,
     backgroundColor: '#FFFFFF',
   },
-  input: { flex: 1, fontSize: 15, color: '#1A2E35' },
-  inputText: { fontSize: 15, color: '#1A2E35' },
+  input: { flex: 1, fontFamily: FONT.regular, fontSize: 16, color: '#0B1C30' },
+  inputText: { fontFamily: FONT.regular, fontSize: 16, color: '#0B1C30' },
   inputError: { borderColor: '#BA1A1A' },
-  errorText: { color: '#BA1A1A', fontSize: 12, marginTop: 4 },
+  errorText: { fontFamily: FONT.regular, fontSize: 12, lineHeight: 16, color: '#BA1A1A', marginTop: 4 },
+
+  // rodapé e botões (48 de altura, raio 8)
   footer: {
     padding: 16,
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: '#E3E8F0',
+    borderTopColor: '#DEE3E4',
   },
   primaryButton: {
-    backgroundColor: '#004D5B',
-    height: 50,
-    borderRadius: 10,
+    backgroundColor: '#006A66',
+    height: 48,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  primaryButtonText: { color: '#FFFFFF', fontWeight: '700', fontSize: 14, letterSpacing: 0.5 },
+  primaryButtonText: { fontFamily: FONT.semibold, fontSize: 14, color: '#FFFFFF' },
   cancelButton: {
-    height: 50,
+    height: 48,
     paddingHorizontal: 20,
-    borderRadius: 10,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#BFC8CB',
+    borderColor: '#70787B',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cancelButtonText: { color: '#5B6B70', fontWeight: '700', fontSize: 14 },
+  cancelButtonText: { fontFamily: FONT.semibold, fontSize: 14, color: '#00353F' },
+
+  // modal de especialidade
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: 'rgba(16, 24, 26, 0.55)',
     justifyContent: 'flex-end',
   },
   modalSheet: {
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    padding: 20,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+    borderWidth: 1,
+    borderColor: '#BFC8CB',
+    padding: 24,
   },
-  modalTitle: { fontSize: 16, fontWeight: '700', color: '#00353F', marginBottom: 14 },
-  modalItem: { paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#F1F4F8' },
-  modalItemText: { fontSize: 15, color: '#1A2E35' },
+  modalTitle: {
+    fontFamily: FONT.semibold,
+    fontSize: 20,
+    lineHeight: 28,
+    color: '#0B1C30',
+    marginBottom: 12,
+  },
+  modalItem: { paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#DEE3E4' },
+  modalItemText: { fontFamily: FONT.regular, fontSize: 16, color: '#0B1C30' },
 });
