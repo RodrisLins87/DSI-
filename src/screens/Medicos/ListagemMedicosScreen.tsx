@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,13 +8,18 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
+  Animated,
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
+import { Swipeable } from 'react-native-gesture-handler';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { auth, db } from '../../lib/firebase';
 import { getInitials } from '../../utils/masks';
-import ConfirmDeleteModal from '../../utils/ConfirmDeleteModal';
+import ExcluirMedicoModal from './ExcluirMedicoModal';
+import BarraNavegacao from '../../utils/BarraNavegacao';
+import { FONT } from '../../global/fonts';
 
 interface Medico {
   id: string;
@@ -28,8 +33,40 @@ interface Medico {
 const normalizar = (s: string): string =>
   s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
+// Arrastar o card para a esquerda mostra a lixeira (mesmo esquema da ListagemConsultasScreen)
+function CartaoArrastavel({ children, onExcluir }: { children: React.ReactNode; onExcluir: () => void }) {
+  const ref = useRef<Swipeable>(null);
+
+  function renderAcao(progress: Animated.AnimatedInterpolation<number>) {
+    const translateX = progress.interpolate({ inputRange: [0, 1], outputRange: [72, 0] });
+    return (
+      <TouchableOpacity
+        style={styles.acaoExcluir}
+        activeOpacity={0.85}
+        onPress={() => {
+          ref.current?.close();
+          onExcluir();
+        }}
+      >
+        <Animated.View style={{ transform: [{ translateX }] }}>
+          <Ionicons name="trash-outline" size={24} color="#FFFFFF" />
+        </Animated.View>
+      </TouchableOpacity>
+    );
+  }
+
+  return (
+    <View style={styles.espacoEntreCards}>
+      <Swipeable ref={ref} renderRightActions={renderAcao} overshootRight={false} rightThreshold={40}>
+        {children}
+      </Swipeable>
+    </View>
+  );
+}
+
 export default function ListagemMedicosScreen() {
   const navigation = useNavigation<any>();
+  const insets = useSafeAreaInsets();
 
   const [medicos, setMedicos] = useState<Medico[]>([]);
   const [busca, setBusca] = useState<string>('');
@@ -121,20 +158,30 @@ export default function ListagemMedicosScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Médicos</Text>
+      {/* Cabeçalho */}
+      <View style={[styles.header, { paddingTop: insets.top }]}>
+        <View style={styles.headerLinha}>
+          <Text style={styles.title}>Médicos</Text>
+          <TouchableOpacity
+            style={styles.addButton}
+            activeOpacity={0.85}
+            onPress={() => navigation.navigate('FormularioMedico')}
+          >
+            <MaterialIcons name="add" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={styles.searchBox}>
-        <Ionicons name="search-outline" size={18} color="#8A9599" style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Buscar por nome ou especialidade"
-          placeholderTextColor="#8A9599"
-          value={busca}
-          onChangeText={setBusca}
-        />
-      </View>
+  <MaterialIcons name="search" size={24} color="#70787B" />
+  <TextInput
+    style={styles.searchInput}
+    placeholder="Buscar por nome ou especialidade"
+    placeholderTextColor="#6B7280"
+    value={busca}
+    onChangeText={setBusca}
+  />
+</View>
 
       {loading ? (
         <ActivityIndicator size="large" color="#006A66" style={{ marginTop: 40 }} />
@@ -142,46 +189,41 @@ export default function ListagemMedicosScreen() {
         <FlatList
           data={filtrados}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingBottom: 100 }}
+          contentContainerStyle={styles.lista}
+          showsVerticalScrollIndicator={false}
           refreshing={refreshing}
           onRefresh={() => {
             setRefreshing(true);
             fetchMedicos();
           }}
           renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.card}
-              activeOpacity={0.7}
-              onPress={() => navigation.navigate('FormularioMedico', { medicoId: item.id })}
-            >
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>{getInitials(item.nome)}</Text>
-              </View>
-
-              <View style={styles.cardInfo}>
-                <Text style={styles.cardTitle}>{item.nome}</Text>
-                <Text style={styles.cardSubtitle}>{item.especialidade}</Text>
-                <Text style={styles.cardCrm}>{item.crm}</Text>
-              </View>
-
+            <CartaoArrastavel onExcluir={() => setMedicoParaExcluir(item)}>
               <TouchableOpacity
-                style={styles.calendarIconButton}
-                activeOpacity={0.6}
-                onPress={() => navigation.navigate('GerenciarAgenda', { medicoId: item.id })}
+                style={styles.card}
+                activeOpacity={0.7}
+                onPress={() => navigation.navigate('FormularioMedico', { medicoId: item.id })}
               >
-                <Ionicons name="calendar-outline" size={22} color="#006A66" />
-              </TouchableOpacity>
+                <View style={styles.avatar}>
+                  <Text style={styles.avatarText}>{getInitials(item.nome)}</Text>
+                </View>
 
-              <TouchableOpacity
-                style={styles.deleteIconButton}
-                activeOpacity={0.6}
-                onPress={() => setMedicoParaExcluir(item)}
-              >
-                <Ionicons name="trash-outline" size={20} color="#BA1A1A" />
-              </TouchableOpacity>
+                <View style={styles.cardInfo}>
+                  <Text style={styles.cardTitle}>{item.nome}</Text>
+                  <Text style={styles.cardSubtitle}>{item.especialidade}</Text>
+                  <Text style={styles.cardCrm}>{item.crm}</Text>
+                </View>
 
-              <Ionicons name="chevron-forward" size={20} color="#8A9599" />
-            </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.calendarIconButton}
+                  activeOpacity={0.6}
+                  onPress={() => navigation.navigate('GerenciarAgenda', { medicoId: item.id })}
+                >
+                  <Ionicons name="calendar-outline" size={22} color="#006A66" />
+                </TouchableOpacity>
+
+                <Ionicons name="chevron-forward" size={20} color="#70787B" />
+              </TouchableOpacity>
+            </CartaoArrastavel>
           )}
           ListEmptyComponent={
             <Text style={styles.empty}>
@@ -191,89 +233,115 @@ export default function ListagemMedicosScreen() {
         />
       )}
 
-      <TouchableOpacity
-        style={styles.fab}
-        activeOpacity={0.85}
-        onPress={() => navigation.navigate('FormularioMedico')}
-      >
-        <Ionicons name="add" size={22} color="#FFFFFF" />
-        <Text style={styles.fabText}>Adicionar Médico</Text>
-      </TouchableOpacity>
+      <BarraNavegacao ativa="inicio" />
 
-      <ConfirmDeleteModal
-        visible={medicoParaExcluir !== null}
-        title="Excluir Médico?"
-        message={`Esta ação é irreversível. O médico ${medicoParaExcluir?.nome ?? ''} será removido permanentemente do sistema.`}
-        onCancel={() => setMedicoParaExcluir(null)}
-        onConfirm={handleConfirmDelete}
-        loading={deleting}
-      />
+              <ExcluirMedicoModal
+          visible={medicoParaExcluir !== null}
+          nomeMedico={medicoParaExcluir?.nome}
+          loading={deleting}
+          onManter={() => setMedicoParaExcluir(null)}
+          onExcluir={handleConfirmDelete}
+        />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, paddingTop: 60, backgroundColor: '#F8F9FF' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  title: { fontSize: 24, fontWeight: 'bold', color: '#1A2E35' },
+  container: { flex: 1, backgroundColor: '#F8F9FF' },
+
+  // cabeçalho (igual à ListagemConsultasScreen)
+  header: {
+    backgroundColor: '#F8F9FF',
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 1,
+    zIndex: 1,
+  },
+  headerLinha: {
+    height: 76,
+    paddingTop: 16,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  title: { fontFamily: FONT.semibold, fontSize: 24, lineHeight: 32, color: '#00353F' },
+  addButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    backgroundColor: '#006A66',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  // busca
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    height: 50,
+    marginHorizontal: 20,
+    marginTop: 16,
+    marginBottom: 24,
+    paddingHorizontal: 8,
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#DDE3E6',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    marginBottom: 14,
+    borderColor: '#BFC8CB',
+    borderRadius: 8,
   },
-  searchIcon: { marginRight: 8 },
-  searchInput: { flex: 1, paddingVertical: 12, color: '#1A2E35' },
+  searchInput: {
+    flex: 1,
+    marginLeft: 8,
+    fontFamily: FONT.regular,
+    fontSize: 16,
+    color: '#0B1C30',
+  },
+
+  // lista e cards
+  lista: { paddingHorizontal: 20, paddingBottom: 24 },
+  espacoEntreCards: { marginBottom: 16 },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 10,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#BFC8CB',
+    borderRadius: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 1,
   },
   avatar: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#0F4C4A',
+    backgroundColor: '#00353F',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
   },
-  avatarText: { color: '#fff', fontWeight: '700', fontSize: 15 },
+  avatarText: { fontFamily: FONT.semibold, fontSize: 14, color: '#FFFFFF' },
   cardInfo: { flex: 1 },
-  cardTitle: { fontSize: 16, fontWeight: 'bold', color: '#1A2E35' },
-  cardSubtitle: { color: '#5B6B70', marginTop: 2 },
-  cardCrm: { color: '#8A9599', marginTop: 2, fontSize: 12 },
-  calendarIconButton: {
-    padding: 8,
-    marginRight: 4,
-  },
-  deleteIconButton: {
-    padding: 8,
-    marginRight: 4,
-  },
-  empty: { textAlign: 'center', color: '#8A9599', marginTop: 40 },
-  fab: {
-    position: 'absolute',
-    right: 20,
-    bottom: 30,
-    flexDirection: 'row',
+  cardTitle: { fontFamily: FONT.semibold, fontSize: 20, lineHeight: 28, color: '#0B1C30' },
+  cardSubtitle: { fontFamily: FONT.regular, fontSize: 14, lineHeight: 20, color: '#40484B' },
+  cardCrm: { fontFamily: FONT.regular, fontSize: 12, lineHeight: 16, color: '#70787B', marginTop: 2 },
+  calendarIconButton: { padding: 8, marginRight: 4 },
+
+  // botão que aparece ao arrastar (igual ao de cancelar consulta)
+  acaoExcluir: {
+    width: 72,
+    marginLeft: 8,
+    borderRadius: 8,
+    backgroundColor: '#BA1A1A',
     alignItems: 'center',
-    backgroundColor: '#0F4C4A',
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 28,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
+    justifyContent: 'center',
   },
-  fabText: { color: '#fff', fontWeight: '600', marginLeft: 6 },
+
+  empty: { fontFamily: FONT.regular, textAlign: 'center', color: '#70787B', marginTop: 40 },
 });

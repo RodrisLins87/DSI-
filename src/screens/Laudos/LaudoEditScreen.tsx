@@ -1,5 +1,5 @@
 import {
-    View, ScrollView, Text, TextInput, TouchableOpacity, Modal, FlatList, ActivityIndicator, Linking,
+    View, ScrollView, Text, TextInput, TouchableOpacity, Modal, FlatList, ActivityIndicator, Linking, Alert,
 } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { estilos } from './estilo_laudo';
@@ -11,16 +11,18 @@ import { auth, db, storage } from '../../lib/firebase';
 import {
     collection, doc, getDoc, getDocs, updateDoc, serverTimestamp, query, where,
 } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+import { ref, deleteObject } from 'firebase/storage';
+import { enviarArquivo, urlDoArquivo, apagarArquivo, nomeSeguro } from '../../lib/supabase';
 
 type Item = { id: string; nome: string; especialidade?: string };
 
 type Anexo = {
     nome: string;
-    url: string;
+    url: string | null;
     caminho: string;
     tamanho: number | null;
     tipo: string | null;
+    storage: 'supabase' | 'firebase';
 };
 
 function formatarTamanho(bytes: number | null): string {
@@ -80,13 +82,16 @@ export default function LaudoEditScreen({ navigation, route }: { navigation: any
                     setDataExame(`${dd}/${mm}/${data.getFullYear()}`);
                 }
 
-                if (d.arquivoUrl) {
+                // Laudos novos (Supabase) têm arquivoUrl null, então basta ter o caminho
+                if (d.arquivoUrl || d.arquivoCaminho) {
                     setAnexo({
                         nome: d.nomeArquivo ?? 'arquivo',
-                        url: d.arquivoUrl,
+                        url: d.arquivoUrl ?? null,
                         caminho: d.arquivoCaminho,
                         tamanho: d.arquivoTamanho ?? null,
                         tipo: d.arquivoTipo ?? null,
+                        // Laudos antigos não têm esse campo e continuam no Firebase
+                        storage: d.arquivoStorage ?? 'firebase',
                     });
                 }
 
@@ -132,8 +137,19 @@ export default function LaudoEditScreen({ navigation, route }: { navigation: any
         }
     }
 
-    function visualizar() {
-        if (anexo?.url) Linking.openURL(anexo.url);
+    async function visualizar() {
+        if (!anexo) return;
+        try {
+            if (anexo.storage === 'supabase') {
+                const url = await urlDoArquivo(anexo.caminho);
+                await Linking.openURL(url);
+            } else if (anexo.url) {
+                await Linking.openURL(anexo.url);
+            }
+        } catch (erro) {
+            console.log(erro);
+            Alert.alert('Erro', 'Não foi possível abrir o arquivo. Verifique sua conexão e tente novamente.');
+        }
     }
 
     function fecharSeletor() {
@@ -172,20 +188,19 @@ export default function LaudoEditScreen({ navigation, route }: { navigation: any
         try {
             let dadosArquivo = {};
             const caminhoAntigo = anexo?.caminho ?? null;
+            const storageAntigo = anexo?.storage ?? 'firebase';
 
             if (novoArquivo) {
-                const caminho = `clinicas/${clinicaID}/laudos/${Date.now()}_${novoArquivo.name}`;
-                const resposta = await fetch(novoArquivo.uri);
-                const blob = await resposta.blob();
-                const arquivoRef = ref(storage, caminho);
-                await uploadBytes(arquivoRef, blob);
+                const caminho = `clinicas/${clinicaID}/laudos/${Date.now()}_${nomeSeguro(novoArquivo.name)}`;
+                await enviarArquivo(caminho, novoArquivo.uri, novoArquivo.mimeType);
 
                 dadosArquivo = {
                     nomeArquivo: novoArquivo.name,
-                    arquivoUrl: await getDownloadURL(arquivoRef),
+                    arquivoUrl: null,
                     arquivoCaminho: caminho,
                     arquivoTamanho: novoArquivo.size ?? null,
                     arquivoTipo: novoArquivo.mimeType ?? null,
+                    arquivoStorage: 'supabase',
                 };
             }
 
@@ -204,7 +219,11 @@ export default function LaudoEditScreen({ navigation, route }: { navigation: any
 
             if (novoArquivo && caminhoAntigo) {
                 try {
-                    await deleteObject(ref(storage, caminhoAntigo));
+                    if (storageAntigo === 'supabase') {
+                        await apagarArquivo(caminhoAntigo);
+                    } else {
+                        await deleteObject(ref(storage, caminhoAntigo));
+                    }
                 } catch (e) {
                     console.log('Não foi possível apagar o arquivo antigo', e);
                 }

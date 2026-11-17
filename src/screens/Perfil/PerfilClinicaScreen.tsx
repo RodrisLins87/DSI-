@@ -6,17 +6,15 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
+  ScrollView,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { doc, getDoc } from 'firebase/firestore';
-import {
-  useFonts,
-  Manrope_400Regular,
-  Manrope_600SemiBold,
-  Manrope_700Bold,
-} from '@expo-google-fonts/manrope';
 import { auth, db } from '../../lib/firebase';
+import { FONT } from '../../global/fonts';
+import { COR, CabecalhoTela } from '../Consultas/components/AgendamentoCampos';
+import BarraNavegacao from '../../utils/BarraNavegacao';
 
 interface Clinica {
   nome: string;
@@ -29,12 +27,6 @@ interface Clinica {
 export default function PerfilClinicaScreen({ navigation }: { navigation: any }) {
   const [clinica, setClinica] = useState<Clinica | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-
-  const [fontsLoaded] = useFonts({
-    Manrope_400Regular,
-    Manrope_600SemiBold,
-    Manrope_700Bold,
-  });
 
   // Recarrega sempre que a tela volta ao foco (útil depois de editar)
   useFocusEffect(
@@ -58,32 +50,27 @@ export default function PerfilClinicaScreen({ navigation }: { navigation: any })
     }, [])
   );
 
-  if (!fontsLoaded) return null;
-
   return (
     <View style={styles.container}>
-      {/* Cabeçalho */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#0E3D3A" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Perfil da Clínica</Text>
-      </View>
+      <CabecalhoTela titulo="Perfil da Clínica" onVoltar={() => navigation.goBack()} />
 
       {loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color="#0E6B5C" />
-        </View>
+        <ActivityIndicator style={{ marginTop: 40 }} color={COR.botao} />
       ) : (
-        <View style={styles.content}>
+        <ScrollView
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
           {/* Card principal */}
           <View style={styles.card}>
-            <View style={styles.avatar} />
+            <View style={styles.avatar}>
+              <MaterialIcons name="business" size={48} color={COR.destaqueTexto} />
+            </View>
             <Text style={styles.nome}>{clinica?.nome ?? 'Clínica'}</Text>
             <Text style={styles.cnpj}>CNPJ: {clinica?.cnpj}</Text>
 
             <View style={styles.enderecoBox}>
-              <Ionicons name="location-outline" size={20} color="#5A6B69" />
+              <MaterialIcons name="location-on" size={20} color={COR.placeholder} />
               <Text style={styles.enderecoText}>{clinica?.endereco}</Text>
             </View>
           </View>
@@ -94,13 +81,13 @@ export default function PerfilClinicaScreen({ navigation }: { navigation: any })
 
             <Text style={styles.fieldLabel}>E-mail</Text>
             <View style={styles.fieldBox}>
-              <Ionicons name="mail-outline" size={20} color="#5A6B69" />
+              <MaterialIcons name="mail-outline" size={20} color={COR.placeholder} />
               <Text style={styles.fieldText}>{clinica?.email}</Text>
             </View>
 
             <Text style={styles.fieldLabel}>Telefone</Text>
-            <View style={styles.fieldBox}>
-              <Ionicons name="call-outline" size={20} color="#5A6B69" />
+            <View style={[styles.fieldBox, { marginBottom: 0 }]}>
+              <MaterialIcons name="phone" size={20} color={COR.placeholder} />
               <Text style={styles.fieldText}>{clinica?.telefone || 'Não informado'}</Text>
             </View>
           </View>
@@ -110,88 +97,60 @@ export default function PerfilClinicaScreen({ navigation }: { navigation: any })
             style={styles.editButton}
             onPress={() => navigation.navigate('EditarPerfil')}
           >
-            <Ionicons name="pencil" size={18} color="#FFFFFF" />
-            <Text style={styles.editButtonText}>Editar Perfil</Text>
+            <MaterialIcons name="edit" size={18} color="#FFFFFF" />
+            <Text style={styles.editButtonText}>EDITAR PERFIL</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.deleteButton}
             onPress={() => navigation.navigate('ConfirmarExclusao')}
           >
-            <Ionicons name="trash-outline" size={18} color="#A61B1B" />
-            <Text style={styles.deleteButtonText}>Excluir Conta</Text>
+            <MaterialIcons name="delete-outline" size={18} color="#BA1A1A" />
+            <Text style={styles.deleteButtonText}>EXCLUIR CONTA</Text>
           </TouchableOpacity>
-        </View>
+        </ScrollView>
       )}
 
       {/* Barra inferior */}
-      <View style={styles.tabBar}>
-        <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('Home')}>
-          <Ionicons name="home-outline" size={22} color="#5A6B69" />
-          <Text style={styles.tabLabel}>Início</Text>
-        </TouchableOpacity>
-        <View style={styles.tabItem}>
-          <Ionicons name="person" size={22} color="#0E6B5C" />
-          <Text style={[styles.tabLabel, { color: '#0E6B5C' }]}>Perfil</Text>
-        </View>
-      </View>
+      <BarraNavegacao ativa="perfil" />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F7F9FC' },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  container: { flex: 1, backgroundColor: COR.fundo },
 
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 50,
-    paddingBottom: 16,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E5E9',
-    backgroundColor: '#F7F9FC',
-  },
-  backButton: { position: 'absolute', left: 20, bottom: 16 },
-  headerTitle: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 18,
-    color: '#0E3D3A',
-  },
-
-  content: { flex: 1, padding: 20 },
+  content: { paddingHorizontal: 20, paddingTop: 17, paddingBottom: 28 },
 
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
+    backgroundColor: COR.branco,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E2E5E9',
+    borderColor: COR.borda,
     padding: 20,
-    marginBottom: 18,
+    marginBottom: 16,
   },
   avatar: {
-    width: 110,
-    height: 110,
-    borderRadius: 55,
-    backgroundColor: '#EEF3FB',
-    borderWidth: 2,
-    borderColor: '#DCE7F5',
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: COR.destaque,
+    alignItems: 'center',
+    justifyContent: 'center',
     alignSelf: 'center',
-    marginBottom: 18,
+    marginBottom: 16,
   },
   nome: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: FONT.semibold,
     fontSize: 20,
-    color: '#0E3D3A',
+    color: COR.escuro,
     textAlign: 'center',
     marginBottom: 4,
   },
   cnpj: {
-    fontFamily: 'Manrope_400Regular',
-    fontSize: 13,
-    color: '#5A6B69',
+    fontFamily: FONT.regular,
+    fontSize: 14,
+    color: COR.suave,
     textAlign: 'center',
     marginBottom: 16,
   },
@@ -200,49 +159,53 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     borderWidth: 1,
-    borderColor: '#E2E5E9',
-    borderRadius: 12,
+    borderColor: COR.borda,
+    borderRadius: 8,
     padding: 12,
-    backgroundColor: '#FBFCFD',
+    backgroundColor: COR.branco,
   },
   enderecoText: {
     flex: 1,
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: FONT.regular,
     fontSize: 14,
-    color: '#1C2B2E',
+    color: COR.texto,
   },
 
   sectionLabel: {
-    fontFamily: 'Manrope_700Bold',
+    fontFamily: FONT.bold,
     fontSize: 12,
-    color: '#0E3D3A',
-    letterSpacing: 0.5,
+    color: COR.escuro,
+    letterSpacing: 0.55,
     marginBottom: 14,
   },
   fieldLabel: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: FONT.regular,
     fontSize: 12,
-    color: '#5A6B69',
-    marginBottom: 6,
-    marginLeft: 4,
+    color: COR.suave,
+    marginBottom: 7,
   },
   fieldBox: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     borderWidth: 1,
-    borderColor: '#E2E5E9',
-    borderRadius: 12,
+    borderColor: COR.borda,
+    borderRadius: 8,
     paddingHorizontal: 14,
-    paddingVertical: 13,
-    backgroundColor: '#FBFCFD',
-    marginBottom: 14,
+    height: 48,
+    backgroundColor: COR.branco,
+    marginBottom: 18,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 1,
   },
   fieldText: {
     flex: 1,
-    fontFamily: 'Manrope_400Regular',
-    fontSize: 15,
-    color: '#1C2B2E',
+    fontFamily: FONT.regular,
+    fontSize: 14,
+    color: COR.texto,
   },
 
   editButton: {
@@ -250,14 +213,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#0E6B5C',
-    borderRadius: 12,
-    paddingVertical: 16,
+    backgroundColor: COR.botao,
+    borderRadius: 8,
+    height: 56,
     marginBottom: 12,
   },
   editButtonText: {
-    fontFamily: 'Manrope_600SemiBold',
-    fontSize: 15,
+    fontFamily: FONT.bold,
+    fontSize: 12,
+    letterSpacing: 0.55,
     color: '#FFFFFF',
   },
   deleteButton: {
@@ -265,29 +229,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#FFE1DD',
-    borderRadius: 12,
-    paddingVertical: 16,
+    backgroundColor: '#FFDAD6',
+    borderRadius: 8,
+    height: 56,
   },
   deleteButtonText: {
-    fontFamily: 'Manrope_600SemiBold',
-    fontSize: 15,
-    color: '#A61B1B',
-  },
-
-  tabBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#E2E5E9',
-    backgroundColor: '#FFFFFF',
-  },
-  tabItem: { alignItems: 'center' },
-  tabLabel: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: FONT.bold,
     fontSize: 12,
-    color: '#5A6B69',
-    marginTop: 2,
+    letterSpacing: 0.55,
+    color: '#BA1A1A',
   },
 });

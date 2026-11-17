@@ -5,9 +5,9 @@ import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { useFonts, Manrope_400Regular, Manrope_700Bold } from '@expo-google-fonts/manrope';
 import * as DocumentPicker from 'expo-document-picker';
 import * as mascaras from '../../utils/masks';
-import { auth, db, storage } from '../../lib/firebase';
+import { auth, db } from '../../lib/firebase';
 import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { enviarArquivo, nomeSeguro } from '../../lib/supabase';
 
 type Item = { id: string; nome: string; especialidade?: string};
 
@@ -60,21 +60,11 @@ async function salvar() {
     setSalvando(true);
 
     try {
-        let arquivoUrl: string | null = null;
         let caminho : string | null = null;
 
         if (arquivo) {
-            
-            caminho = `clinicas/${clinicaID}/laudos/${Date.now()}_${arquivo.name}`;
-
-            const resposta = await fetch(arquivo.uri);
-            const blob = await resposta.blob();
-
-            
-            const arquivoRef = ref(storage, caminho);
-
-            await uploadBytes(arquivoRef, blob);
-            arquivoUrl = await getDownloadURL(arquivoRef);
+            caminho = `clinicas/${clinicaID}/laudos/${Date.now()}_${nomeSeguro(arquivo.name)}`;
+            await enviarArquivo(caminho, arquivo.uri, arquivo.mimeType);
         }
 
         await addDoc(collection(db, 'clinicas', clinicaID, 'laudos'), {
@@ -87,8 +77,11 @@ async function salvar() {
             dataExame: new Date(ano, mes - 1, dia),
             observacoes: observacoes_adicionais,
             nomeArquivo: arquivo?.name ?? null,
-            arquivoUrl,
+            arquivoUrl: null,
             arquivoCaminho: caminho,
+            arquivoTamanho: arquivo?.size ?? null,
+            arquivoTipo: arquivo?.mimeType ?? null,
+            arquivoStorage: arquivo ? 'supabase' : null,
             criadoEm: serverTimestamp(),
         });
         alert('Laudo salvo com sucesso!');
@@ -226,8 +219,12 @@ const listaFiltrada = lista.filter((i) =>
             </ScrollView>
 
             <View style={estilos.BottomBox}>
-                    <TouchableOpacity style={estilos.SaveButton} onPress={salvar}>
-                        <Text style={estilos.SaveButtonText}>SALVAR </Text>
+                    <TouchableOpacity
+                        style={[estilos.SaveButton, salvando && { opacity: 0.6 }]}
+                        onPress={salvar}
+                        disabled={salvando}
+                    >
+                        <Text style={estilos.SaveButtonText}>{salvando ? 'SALVANDO...' : 'SALVAR'}</Text>
                     </TouchableOpacity>
                 
                 </View>

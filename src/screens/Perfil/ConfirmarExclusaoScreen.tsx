@@ -11,27 +11,19 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { deleteUser, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
 import { deleteDoc, doc } from 'firebase/firestore';
-import {
-  useFonts,
-  Manrope_400Regular,
-  Manrope_600SemiBold,
-  Manrope_700Bold,
-} from '@expo-google-fonts/manrope';
 import { auth, db } from '../../lib/firebase';
+import { FONT } from '../../global/fonts';
+import { COR, CabecalhoTela, Rotulo } from '../Consultas/components/AgendamentoCampos';
 
 export default function ConfirmarExclusaoScreen({ navigation }: { navigation: any }) {
+  const insets = useSafeAreaInsets();
   const [senha, setSenha] = useState<string>('');
   const [senhaVisivel, setSenhaVisivel] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
-
-  const [fontsLoaded] = useFonts({
-    Manrope_400Regular,
-    Manrope_600SemiBold,
-    Manrope_700Bold,
-  });
 
   async function handleExcluir(): Promise<void> {
     const user = auth.currentUser;
@@ -66,29 +58,21 @@ export default function ConfirmarExclusaoScreen({ navigation }: { navigation: an
     }
   }
 
-  if (!fontsLoaded) return null;
-
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      {/* Cabeçalho */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-          disabled={loading}
-        >
-          <Ionicons name="arrow-back" size={24} color="#0E3D3A" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Confirmar Exclusão</Text>
-      </View>
+      <CabecalhoTela
+        titulo="Confirmar Exclusão"
+        onVoltar={() => navigation.goBack()}
+        desabilitado={loading}
+      />
 
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         {/* Alerta */}
         <View style={styles.alertCircle}>
-          <Ionicons name="warning" size={34} color="#B91C1C" />
+          <MaterialIcons name="warning" size={32} color="#BA1A1A" />
         </View>
         <Text style={styles.alertTitle}>Ação Irreversível</Text>
         <Text style={styles.alertText}>
@@ -97,30 +81,30 @@ export default function ConfirmarExclusaoScreen({ navigation }: { navigation: an
         </Text>
 
         {/* Senha */}
-        <Text style={styles.label}>Senha Atual</Text>
-        <View style={styles.inputWrap}>
+        <Rotulo primeiro>Senha Atual</Rotulo>
+        <View style={styles.campo}>
           <TextInput
             style={styles.input}
             value={senha}
             onChangeText={setSenha}
             placeholder="Insira sua senha"
-            placeholderTextColor="#9AA5A3"
+            placeholderTextColor={COR.placeholder}
             secureTextEntry={!senhaVisivel}
             autoCapitalize="none"
             editable={!loading}
           />
           <TouchableOpacity onPress={() => setSenhaVisivel(!senhaVisivel)}>
-            <Ionicons
-              name={senhaVisivel ? 'eye-off-outline' : 'eye-outline'}
+            <MaterialIcons
+              name={senhaVisivel ? 'visibility-off' : 'visibility'}
               size={22}
-              color="#5A6B69"
+              color={COR.placeholder}
             />
           </TouchableOpacity>
         </View>
       </ScrollView>
 
       {/* Rodapé fixo */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 20) }]}>
         <TouchableOpacity
           style={[styles.deleteButton, loading && styles.buttonDisabled]}
           onPress={handleExcluir}
@@ -146,111 +130,93 @@ export default function ConfirmarExclusaoScreen({ navigation }: { navigation: an
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F7F9FC' },
+  container: { flex: 1, backgroundColor: COR.fundo },
 
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 50,
-    paddingBottom: 16,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E5E9',
-    backgroundColor: '#F7F9FC',
-  },
-  backButton: { position: 'absolute', left: 20, bottom: 16 },
-  headerTitle: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 18,
-    color: '#0E3D3A',
-  },
-
-  content: { padding: 20, alignItems: 'stretch' },
+  content: { paddingHorizontal: 20, paddingTop: 24, paddingBottom: 28 },
 
   alertCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#FFD9D6',
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#FFDAD6',
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'center',
-    marginTop: 8,
-    marginBottom: 16,
+    marginBottom: 14,
   },
   alertTitle: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 22,
-    color: '#B91C1C',
+    fontFamily: FONT.bold,
+    fontSize: 20,
+    color: '#BA1A1A',
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   alertText: {
-    fontFamily: 'Manrope_400Regular',
+    fontFamily: FONT.regular,
     fontSize: 14,
-    lineHeight: 21,
-    color: '#3D4F4D',
+    lineHeight: 22,
+    color: COR.suave,
     textAlign: 'center',
     marginBottom: 28,
   },
 
-  label: {
-    fontFamily: 'Manrope_600SemiBold',
-    fontSize: 13,
-    color: '#3D4F4D',
-    marginBottom: 8,
-  },
-  inputWrap: {
+  campo: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: '#FFFFFF',
+    height: 48,
+    backgroundColor: COR.branco,
     borderWidth: 1,
-    borderColor: '#D5DAD9',
-    borderRadius: 12,
+    borderColor: COR.borda,
+    borderRadius: 8,
     paddingHorizontal: 14,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 1,
   },
   input: {
     flex: 1,
-    fontFamily: 'Manrope_400Regular',
-    fontSize: 15,
-    color: '#1C2B2E',
-    paddingVertical: 14,
+    fontFamily: FONT.regular,
+    fontSize: 14,
+    color: COR.texto,
+    paddingVertical: 0,
   },
 
   footer: {
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: '#E2E5E9',
-    backgroundColor: '#F7F9FC',
+    borderTopColor: COR.borda,
+    backgroundColor: COR.branco,
   },
   deleteButton: {
-    backgroundColor: '#B91C1C',
-    borderRadius: 12,
-    paddingVertical: 16,
+    height: 48,
+    backgroundColor: '#BA1A1A',
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
   },
   buttonDisabled: { opacity: 0.6 },
   deleteButtonText: {
-    fontFamily: 'Manrope_600SemiBold',
-    fontSize: 15,
+    fontFamily: FONT.semibold,
+    fontSize: 14,
     color: '#FFFFFF',
   },
   cancelButton: {
+    height: 48,
     borderWidth: 1,
-    borderColor: '#9AA5A3',
-    borderRadius: 12,
-    paddingVertical: 15,
+    borderColor: COR.placeholder,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: COR.branco,
   },
   cancelButtonText: {
-    fontFamily: 'Manrope_600SemiBold',
-    fontSize: 15,
-    color: '#1C2B2E',
+    fontFamily: FONT.semibold,
+    fontSize: 14,
+    color: COR.escuro,
   },
 });

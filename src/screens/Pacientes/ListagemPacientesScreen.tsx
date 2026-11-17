@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { View, Text, TextInput, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { auth, db } from '../../lib/firebase';
 import SwipeableRow from '../../utils/SwipeableRow';
@@ -21,6 +21,10 @@ function mascararCpf(cpf: string): string {
   if (!cpf || cpf.length < 4) return cpf;
   return `***.${cpf.slice(4)}`;
 }
+
+// remove acentos e deixa minúsculo para a busca (igual à tela de Consultas)
+const normalizar = (s: string): string =>
+  s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
 export default function ListagemPacientesScreen({ navigation }: { navigation: any }) {
   const [pacientes, setPacientes] = useState<Paciente[]>([]);
@@ -42,10 +46,15 @@ export default function ListagemPacientesScreen({ navigation }: { navigation: an
     }, []),
   );
 
+  const termo = normalizar(busca.trim());
+  const termoDigitos = busca.replace(/\D/g, '');
+  // só compara com o CPF quando o que foi digitado parece um CPF (números, pontos e traço)
+  const buscaPareceCpf = termoDigitos.length > 0 && /^[\d.\-\s]+$/.test(busca.trim());
+
   const filtrados = pacientes.filter(
     (p) =>
-      p.nomeCompleto?.toLowerCase().includes(busca.toLowerCase()) ||
-      p.cpf?.replace(/\D/g, '').includes(busca.replace(/\D/g, '')),
+      normalizar(p.nomeCompleto ?? '').includes(termo) ||
+      (buscaPareceCpf && (p.cpf ?? '').replace(/\D/g, '').includes(termoDigitos)),
   );
 
   function iniciais(nome: string): string {
@@ -84,6 +93,7 @@ export default function ListagemPacientesScreen({ navigation }: { navigation: an
         </View>
 
         <View style={styles.searchBox}>
+          <MaterialIcons name="search" size={24} color="#70787B" />
           <TextInput
             style={styles.searchInput}
             placeholder="Buscar por nome ou CPF"
@@ -147,8 +157,8 @@ const styles = StyleSheet.create({
   title: { fontSize: 24, fontWeight: 'bold', color: '#1A2E35' },
   addButton: { width: 40, height: 40, borderRadius: 10, backgroundColor: '#0F4C4A', alignItems: 'center', justifyContent: 'center' },
   addButtonText: { fontSize: 22, fontWeight: '600', color: '#FFFFFF', lineHeight: 24 },
-  searchBox: { marginBottom: 14 },
-  searchInput: { backgroundColor: '#fff', borderWidth: 1, borderColor: '#DDE3E6', borderRadius: 12, padding: 12, color: '#1A2E35' },
+  searchBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderWidth: 1, borderColor: '#DDE3E6', borderRadius: 12, paddingHorizontal: 12, marginBottom: 14 },
+  searchInput: { flex: 1, marginLeft: 8, paddingVertical: 12, color: '#1A2E35' },
 
   card: {
     flexDirection: 'row',
