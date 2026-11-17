@@ -8,6 +8,7 @@ import BarraNavegacao from '../../utils/BarraNavegacao';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ResumoClinica from './components/ResumoClinica';
 import MapaFaltasResumo from './components/MapaFaltasResumo';
+import CarrosselPropaganda from './components/CarrosselPropaganda';
 
 interface Contadores {
   pacientes: number;
@@ -126,6 +127,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <ResumoClinica />
         <MapaFaltasResumo />
+        <CarrosselPropaganda />
 
         {/* Card grande: Pacientes */}
         <TouchableOpacity

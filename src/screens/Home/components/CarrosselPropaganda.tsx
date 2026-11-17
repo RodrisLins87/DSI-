@@ -90,3 +90,137 @@ export default function CarrosselPropaganda({
   function abrirLink(link?: string) {
     if (link) Linking.openURL(link).catch(() => {});
   }
+  return (
+    <View style={styles.wrapper}>
+      <FlatList
+        ref={listaRef}
+        data={propagandas}
+        keyExtractor={(item) => item.id}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        snapToInterval={largura}
+        decelerationRate="fast"
+        onScrollBeginDrag={() => {
+          arrastando.current = true;
+        }}
+        onMomentumScrollEnd={aoTerminarScroll}
+        getItemLayout={(_, i) => ({ length: largura, offset: largura * i, index: i })}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            activeOpacity={item.link ? 0.85 : 1}
+            onPress={() => abrirLink(item.link)}
+            style={{ width: largura, height: altura }}
+          >
+            <ImageBackground
+              source={item.imagem}
+              style={styles.imagem}
+              imageStyle={styles.imagemRadius}
+              resizeMode="cover"
+            >
+              <View style={styles.overlay} />
+
+              <View style={styles.tag}>
+                <Text style={styles.tagTexto}>Publicidade</Text>
+              </View>
+
+              <View style={styles.conteudo}>
+                {!!item.titulo && <Text style={styles.titulo}>{item.titulo}</Text>}
+                {!!item.subtitulo && <Text style={styles.subtitulo}>{item.subtitulo}</Text>}
+                {!!item.textoBotao && (
+                  <View style={styles.botao}>
+                    <Text style={styles.botaoTexto}>{item.textoBotao}</Text>
+                  </View>
+                )}
+              </View>
+            </ImageBackground>
+          </TouchableOpacity>
+        )}
+      />
+
+      {/* Indicadores (bolinhas) */}
+      {propagandas.length > 1 && (
+        <View style={styles.dots}>
+          {propagandas.map((p, i) => (
+            <View key={p.id} style={[styles.dot, i === indice && styles.dotAtivo]} />
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  wrapper: {
+    marginBottom: 12,
+  },
+  imagem: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  imagemRadius: {
+    borderRadius: 16,
+  },
+  overlay: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: 'rgba(14,61,58,0.45)',
+    borderRadius: 16,
+  },
+  tag: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  tagTexto: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+  },
+  conteudo: {
+    padding: 16,
+  },
+  titulo: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  subtitulo: {
+    color: '#E6F0EE',
+    fontSize: 13,
+    marginTop: 2,
+  },
+  botao: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#3FD9C4',
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 20,
+    marginTop: 10,
+  },
+  botaoTexto: {
+    color: '#0E3D3A',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  dots: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 8,
+    gap: 6,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#C9CFD4',
+  },
+  dotAtivo: {
+    width: 18,
+    backgroundColor: '#0E3D3A',
+  },
+});
