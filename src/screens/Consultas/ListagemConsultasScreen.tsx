@@ -8,10 +8,12 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
-  Animated,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { Swipeable } from 'react-native-gesture-handler';
+import ReanimatedSwipeable, {
+  SwipeableMethods,
+} from 'react-native-gesture-handler/ReanimatedSwipeable';
+import Reanimated, { SharedValue, interpolate, useAnimatedStyle } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { collection, query, where, getDocs, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
@@ -77,6 +79,26 @@ const normalizar = (s: string): string =>
 // ---------------------------------------------------------------
 // Arrastar o card para a esquerda revela o botão "cancelar consulta"
 // ---------------------------------------------------------------
+function AcaoCancelar({
+  progress,
+  onPress,
+}: {
+  progress: SharedValue<number>;
+  onPress: () => void;
+}) {
+  const estiloIcone = useAnimatedStyle(() => ({
+    transform: [{ translateX: interpolate(progress.value, [0, 1], [72, 0]) }],
+  }));
+
+  return (
+    <TouchableOpacity style={styles.acaoCancelar} activeOpacity={0.85} onPress={onPress}>
+      <Reanimated.View style={estiloIcone}>
+        <MaterialIcons name="event-busy" size={24} color="#FFFFFF" />
+      </Reanimated.View>
+    </TouchableOpacity>
+  );
+}
+
 function CartaoArrastavel({
   children,
   podeCancelar,
@@ -86,33 +108,28 @@ function CartaoArrastavel({
   podeCancelar: boolean;
   onCancelar: () => void;
 }) {
-  const ref = useRef<Swipeable>(null);
+  const ref = useRef<SwipeableMethods>(null);
 
   if (!podeCancelar) return <View style={styles.espacoEntreCards}>{children}</View>;
 
-  function renderAcao(progress: Animated.AnimatedInterpolation<number>) {
-    const translateX = progress.interpolate({ inputRange: [0, 1], outputRange: [72, 0] });
-    return (
-      <TouchableOpacity
-        style={styles.acaoCancelar}
-        activeOpacity={0.85}
-        onPress={() => {
-          ref.current?.close();
-          onCancelar();
-        }}
-      >
-        <Animated.View style={{ transform: [{ translateX }] }}>
-          <MaterialIcons name="event-busy" size={24} color="#FFFFFF" />
-        </Animated.View>
-      </TouchableOpacity>
-    );
-  }
-
   return (
     <View style={styles.espacoEntreCards}>
-      <Swipeable ref={ref} renderRightActions={renderAcao} overshootRight={false} rightThreshold={40}>
+      <ReanimatedSwipeable
+        ref={ref}
+        overshootRight={false}
+        rightThreshold={40}
+        renderRightActions={(progress) => (
+          <AcaoCancelar
+            progress={progress}
+            onPress={() => {
+              ref.current?.close();
+              onCancelar();
+            }}
+          />
+        )}
+      >
         {children}
-      </Swipeable>
+      </ReanimatedSwipeable>
     </View>
   );
 }

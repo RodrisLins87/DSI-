@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,10 +8,8 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
-  Animated,
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { Swipeable } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
@@ -19,6 +17,7 @@ import { auth, db } from '../../lib/firebase';
 import { getInitials } from '../../utils/masks';
 import ExcluirMedicoModal from './ExcluirMedicoModal';
 import BarraNavegacao from '../../utils/BarraNavegacao';
+import CartaoArrastavel from '../../components/CartaoArrastavel';
 import { FONT } from '../../global/fonts';
 
 interface Medico {
@@ -32,37 +31,6 @@ interface Medico {
 
 const normalizar = (s: string): string =>
   s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-
-// Arrastar o card para a esquerda mostra a lixeira (mesmo esquema da ListagemConsultasScreen)
-function CartaoArrastavel({ children, onExcluir }: { children: React.ReactNode; onExcluir: () => void }) {
-  const ref = useRef<Swipeable>(null);
-
-  function renderAcao(progress: Animated.AnimatedInterpolation<number>) {
-    const translateX = progress.interpolate({ inputRange: [0, 1], outputRange: [72, 0] });
-    return (
-      <TouchableOpacity
-        style={styles.acaoExcluir}
-        activeOpacity={0.85}
-        onPress={() => {
-          ref.current?.close();
-          onExcluir();
-        }}
-      >
-        <Animated.View style={{ transform: [{ translateX }] }}>
-          <Ionicons name="trash-outline" size={24} color="#FFFFFF" />
-        </Animated.View>
-      </TouchableOpacity>
-    );
-  }
-
-  return (
-    <View style={styles.espacoEntreCards}>
-      <Swipeable ref={ref} renderRightActions={renderAcao} overshootRight={false} rightThreshold={40}>
-        {children}
-      </Swipeable>
-    </View>
-  );
-}
 
 export default function ListagemMedicosScreen() {
   const navigation = useNavigation<any>();
@@ -197,7 +165,7 @@ export default function ListagemMedicosScreen() {
             fetchMedicos();
           }}
           renderItem={({ item }) => (
-            <CartaoArrastavel onExcluir={() => setMedicoParaExcluir(item)}>
+            <CartaoArrastavel onAcao={() => setMedicoParaExcluir(item)}>
               <TouchableOpacity
                 style={styles.card}
                 activeOpacity={0.7}
@@ -301,7 +269,6 @@ const styles = StyleSheet.create({
 
   // lista e cards
   lista: { paddingHorizontal: 20, paddingBottom: 24 },
-  espacoEntreCards: { marginBottom: 16 },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -332,16 +299,6 @@ const styles = StyleSheet.create({
   cardSubtitle: { fontFamily: FONT.regular, fontSize: 14, lineHeight: 20, color: '#40484B' },
   cardCrm: { fontFamily: FONT.regular, fontSize: 12, lineHeight: 16, color: '#70787B', marginTop: 2 },
   calendarIconButton: { padding: 8, marginRight: 4 },
-
-  // botão que aparece ao arrastar (igual ao de cancelar consulta)
-  acaoExcluir: {
-    width: 72,
-    marginLeft: 8,
-    borderRadius: 8,
-    backgroundColor: '#BA1A1A',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
 
   empty: { fontFamily: FONT.regular, textAlign: 'center', color: '#70787B', marginTop: 40 },
 });
