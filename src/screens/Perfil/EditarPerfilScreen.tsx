@@ -11,16 +11,17 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { sendPasswordResetEmail } from 'firebase/auth';
-import {
-  useFonts,
-  Manrope_400Regular,
-  Manrope_600SemiBold,
-  Manrope_700Bold,
-} from '@expo-google-fonts/manrope';
 import { auth, db } from '../../lib/firebase';
+import { FONT } from '../../global/fonts';
+import {
+  COR,
+  CabecalhoTela,
+  Rotulo,
+  RodapeConfirmar,
+} from '../Consultas/components/AgendamentoCampos';
 
 export default function EditarPerfilScreen({ navigation }: { navigation: any }) {
   const [nome, setNome] = useState<string>('');
@@ -29,12 +30,6 @@ export default function EditarPerfilScreen({ navigation }: { navigation: any }) 
   const [telefone, setTelefone] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
-
-  const [fontsLoaded] = useFonts({
-    Manrope_400Regular,
-    Manrope_600SemiBold,
-    Manrope_700Bold,
-  });
 
   // Preenche o formulário com os dados atuais da clínica
   useEffect(() => {
@@ -61,6 +56,9 @@ export default function EditarPerfilScreen({ navigation }: { navigation: any }) 
   }, []);
 
   async function handleSalvar(): Promise<void> {
+    // O rodapé padrão não bloqueia o toque, então a trava fica aqui
+    if (loading || saving) return;
+
     if (!nome.trim() || !endereco.trim()) {
       Alert.alert('Atenção', 'Nome e endereço são obrigatórios.');
       return;
@@ -105,188 +103,139 @@ export default function EditarPerfilScreen({ navigation }: { navigation: any }) 
     }
   }
 
-  if (!fontsLoaded) return null;
-
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      {/* Cabeçalho */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#0E3D3A" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Editar Perfil da Clínica</Text>
-      </View>
+      <CabecalhoTela
+        titulo="Editar Perfil da Clínica"
+        onVoltar={() => navigation.goBack()}
+        desabilitado={saving}
+      />
 
       {loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color="#0E6B5C" />
-        </View>
+        <ActivityIndicator style={{ marginTop: 40 }} color={COR.botao} />
       ) : (
         <ScrollView
-          contentContainerStyle={styles.content}
+          contentContainerStyle={styles.scroll}
           keyboardShouldPersistTaps="handled"
         >
-          <Text style={styles.label}>Nome da Clínica</Text>
-          <View style={styles.inputWrap}>
-            <Ionicons name="medkit-outline" size={20} color="#5A6B69" />
+          <Rotulo primeiro>Nome da Clínica</Rotulo>
+          <View style={styles.campo}>
+            <MaterialIcons name="add-box" size={22} color={COR.suave} />
             <TextInput
               style={styles.input}
               value={nome}
               onChangeText={setNome}
               placeholder="Nome da Clínica"
-              placeholderTextColor="#9AA5A3"
+              placeholderTextColor={COR.placeholder}
               editable={!saving}
             />
           </View>
 
-          <Text style={styles.label}>Endereço</Text>
-          <View style={styles.inputWrap}>
-            <Ionicons name="location-outline" size={20} color="#5A6B69" />
+          <Rotulo>Endereço</Rotulo>
+          <View style={styles.campo}>
+            <MaterialIcons name="location-on" size={22} color={COR.suave} />
             <TextInput
               style={styles.input}
               value={endereco}
               onChangeText={setEndereco}
               placeholder="Endereço"
-              placeholderTextColor="#9AA5A3"
+              placeholderTextColor={COR.placeholder}
               editable={!saving}
             />
           </View>
 
-          <Text style={styles.label}>E-mail</Text>
-          <View style={styles.inputWrap}>
-            <Ionicons name="mail-outline" size={20} color="#5A6B69" />
+          <Rotulo>E-mail</Rotulo>
+          <View style={styles.campo}>
+            <MaterialIcons name="mail-outline" size={22} color={COR.suave} />
             <TextInput
               style={styles.input}
               value={email}
               onChangeText={setEmail}
               placeholder="E-mail"
-              placeholderTextColor="#9AA5A3"
+              placeholderTextColor={COR.placeholder}
               autoCapitalize="none"
               keyboardType="email-address"
               editable={!saving}
             />
           </View>
 
-          <Text style={styles.label}>Telefone</Text>
-          <View style={styles.inputWrap}>
-            <Ionicons name="call-outline" size={20} color="#5A6B69" />
+          <Rotulo>Telefone</Rotulo>
+          <View style={styles.campo}>
+            <MaterialIcons name="phone" size={22} color={COR.suave} />
             <TextInput
               style={styles.input}
               value={telefone}
               onChangeText={setTelefone}
               placeholder="Telefone"
-              placeholderTextColor="#9AA5A3"
+              placeholderTextColor={COR.placeholder}
               keyboardType="phone-pad"
               editable={!saving}
             />
           </View>
 
-          <TouchableOpacity style={styles.recoverRow} onPress={handleRecuperarSenha}>
-            <Ionicons name="refresh-circle-outline" size={20} color="#0E3D3A" />
+          <TouchableOpacity
+            style={styles.recoverRow}
+            onPress={handleRecuperarSenha}
+            disabled={saving}
+          >
+            <MaterialIcons name="lock-reset" size={20} color={COR.escuro} />
             <Text style={styles.recoverText}>Recuperar Senha</Text>
           </TouchableOpacity>
         </ScrollView>
       )}
 
-      {/* Rodapé fixo */}
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={[styles.saveButton, (saving || loading) && styles.saveButtonDisabled]}
-          onPress={handleSalvar}
-          disabled={saving || loading}
-        >
-          {saving ? (
-            <ActivityIndicator color="#FFFFFF" />
-          ) : (
-            <Text style={styles.saveButtonText}>Salvar Alterações</Text>
-          )}
-        </TouchableOpacity>
-      </View>
+      <RodapeConfirmar
+        texto="SALVAR ALTERAÇÕES"
+        pronto={!loading}
+        salvando={saving}
+        onPress={handleSalvar}
+      />
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F7F9FC' },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  container: { flex: 1, backgroundColor: COR.fundo },
 
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 50,
-    paddingBottom: 16,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E5E9',
-    backgroundColor: '#F7F9FC',
-  },
-  backButton: { position: 'absolute', left: 20, bottom: 16 },
-  headerTitle: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 18,
-    color: '#0E3D3A',
-  },
+  scroll: { paddingHorizontal: 20, paddingTop: 17, paddingBottom: 28 },
 
-  content: { padding: 20 },
-
-  label: {
-    fontFamily: 'Manrope_400Regular',
-    fontSize: 13,
-    color: '#3D4F4D',
-    marginBottom: 8,
-  },
-  inputWrap: {
+  campo: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: '#FFFFFF',
+    height: 48,
+    backgroundColor: COR.branco,
     borderWidth: 1,
-    borderColor: '#D5DAD9',
-    borderRadius: 12,
+    borderColor: COR.borda,
+    borderRadius: 8,
     paddingHorizontal: 14,
-    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 1,
   },
   input: {
     flex: 1,
-    fontFamily: 'Manrope_400Regular',
-    fontSize: 15,
-    color: '#1C2B2E',
-    paddingVertical: 14,
+    fontFamily: FONT.regular,
+    fontSize: 14,
+    color: COR.texto,
+    paddingVertical: 0,
   },
 
   recoverRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginTop: 4,
+    marginTop: 28,
   },
   recoverText: {
-    fontFamily: 'Manrope_700Bold',
-    fontSize: 13,
-    color: '#0E3D3A',
-  },
-
-  footer: {
-    padding: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#E2E5E9',
-    backgroundColor: '#F7F9FC',
-  },
-  saveButton: {
-    backgroundColor: '#0E6B5C',
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  saveButtonDisabled: { opacity: 0.6 },
-  saveButtonText: {
-    fontFamily: 'Manrope_600SemiBold',
-    fontSize: 15,
-    color: '#FFFFFF',
+    fontFamily: FONT.bold,
+    fontSize: 12,
+    letterSpacing: 0.55,
+    color: COR.escuro,
   },
 });

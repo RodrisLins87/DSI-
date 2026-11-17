@@ -10,11 +10,11 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../../lib/firebase';
 import { FONT } from '../../global/fonts';
 import { COR, CabecalhoTela } from '../Consultas/components/AgendamentoCampos';
+import BarraNavegacao from '../../utils/BarraNavegacao';
 
 interface Clinica {
   nome: string;
@@ -25,7 +25,6 @@ interface Clinica {
 }
 
 export default function PerfilClinicaScreen({ navigation }: { navigation: any }) {
-  const insets = useSafeAreaInsets();
   const [clinica, setClinica] = useState<Clinica | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -113,18 +112,7 @@ export default function PerfilClinicaScreen({ navigation }: { navigation: any })
       )}
 
       {/* Barra inferior */}
-      <View style={[styles.tabBar, { paddingBottom: Math.max(insets.bottom, 12) }]}>
-        <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('Home')}>
-          <MaterialIcons name="home" size={24} color={COR.placeholder} />
-          <Text style={styles.tabLabel}>Início</Text>
-        </TouchableOpacity>
-        <View style={styles.tabItem}>
-          <MaterialIcons name="person" size={24} color="#006A66" />
-          <Text style={[styles.tabLabel, { color: '#006A66', fontFamily: FONT.semibold }]}>
-            Perfil
-          </Text>
-        </View>
-      </View>
+      <BarraNavegacao ativa="perfil" />
     </View>
   );
 }
@@ -250,21 +238,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     letterSpacing: 0.55,
     color: '#BA1A1A',
-  },
-
-  tabBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: COR.borda,
-    backgroundColor: COR.branco,
-  },
-  tabItem: { alignItems: 'center' },
-  tabLabel: {
-    fontFamily: FONT.regular,
-    fontSize: 12,
-    color: COR.placeholder,
-    marginTop: 2,
   },
 });
