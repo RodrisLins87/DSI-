@@ -26,6 +26,7 @@ export default function CadastroScreen({ navigation }: { navigation: any }) {
   const [cnpj, setCnpj] = useState<string>('');
   const [endereco, setEndereco] = useState<string>('');
   const [email, setEmail] = useState<string>('');
+  const [telefone, setTelefone] = useState<string>('');
   const [senha, setSenha] = useState<string>('');
   const [confirmarSenha, setConfirmarSenha] = useState<string>('');
 
@@ -38,7 +39,7 @@ export default function CadastroScreen({ navigation }: { navigation: any }) {
 
   async function handleCadastro(): Promise<void> {
     // Validações básicas
-    if (!nome || !cnpj || !endereco || !email || !senha || !confirmarSenha) {
+    if (!nome || !cnpj || !endereco || !email || !telefone || !senha || !confirmarSenha) {
       Alert.alert('Campos obrigatórios', 'Por favor, preencha todos os campos.');
       return;
     }
@@ -65,7 +66,7 @@ export default function CadastroScreen({ navigation }: { navigation: any }) {
         cnpj,
         endereco,
         email,
-        telefone: '',
+        telefone,
         criadoEm: new Date(),
       });
 
@@ -144,6 +145,19 @@ export default function CadastroScreen({ navigation }: { navigation: any }) {
               onChangeText={setEmail}
               autoCapitalize="none"
               keyboardType="email-address"
+            />
+          </View>
+
+          <Text style={styles.titleinput}>Telefone</Text>
+          <View style={styles.inputContainer}>
+            <Feather name="phone" size={18} color="#8A9599" style={styles.icon} />
+            <TextInput
+              style={styles.inputText}
+              placeholder="(00) 0000-0000"
+              placeholderTextColor="#8A9599"
+              value={telefone}
+              onChangeText={setTelefone}
+              keyboardType="phone-pad"
             />
           </View>
 

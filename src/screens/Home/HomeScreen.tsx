@@ -4,22 +4,29 @@ import { Ionicons } from '@expo/vector-icons';
 import { doc, getDoc, collection, query, where, getCountFromServer } from 'firebase/firestore';
 import { auth, db } from '../../lib/firebase';
 import { signOut } from 'firebase/auth';
+import BarraNavegacao from '../../utils/BarraNavegacao';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import ResumoClinica from './components/ResumoClinica';
+import MapaFaltasResumo from './components/MapaFaltasResumo';
 
 interface Contadores {
   pacientes: number;
-  dependentes: number;
+  responsaveis: number;
   medicos: number;
   laudos: number;
+  laudosComArquivo: number;
   consultasHoje: number;
 }
 
 export default function HomeScreen({ navigation }: { navigation: any }) {
+  const insets = useSafeAreaInsets();
   const [nomeClinica, setNomeClinica] = useState<string>('Clínica');
   const [contadores, setContadores] = useState<Contadores>({
     pacientes: 0,
-    dependentes: 0,
+    responsaveis: 0,
     medicos: 0,
     laudos: 0,
+    laudosComArquivo: 0,
     consultasHoje: 0,
   });
   const [loading, setLoading] = useState<boolean>(true);
@@ -49,18 +56,22 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
         // OBS: isso pressupõe que cada documento em 'pacientes', 'dependentes' etc.
         // tem um campo 'clinicaId' salvo. Ajuste o nome do campo se o time
         // combinou outro nome.
-        const [pacientesSnap, dependentesSnap, medicosSnap, laudosSnap] = await Promise.all([
+        // Os laudos ficam em clinicas/{clinicaId}/laudos (é onde a LaudoAddScreen salva)
+        const laudosRef = collection(db, 'clinicas', clinicaId, 'laudos');
+        const [pacientesSnap, responsaveisSnap, medicosSnap, laudosSnap, laudosComArquivoSnap] = await Promise.all([
           getCountFromServer(query(collection(db, 'pacientes'), where('clinicaId', '==', clinicaId))),
-          getCountFromServer(query(collection(db, 'dependentes'), where('clinicaId', '==', clinicaId))),
+          getCountFromServer(query(collection(db, 'responsaveis'), where('clinicaId', '==', clinicaId))),
           getCountFromServer(query(collection(db, 'medicos'), where('clinicaId', '==', clinicaId))),
-          getCountFromServer(query(collection(db, 'laudos'), where('clinicaId', '==', clinicaId))),
+          getCountFromServer(laudosRef),
+          getCountFromServer(query(laudosRef, where('arquivoUrl', '!=', null))),
         ]);
 
         setContadores({
           pacientes: pacientesSnap.data().count,
-          dependentes: dependentesSnap.data().count,
+          responsaveis: responsaveisSnap.data().count,
           medicos: medicosSnap.data().count,
           laudos: laudosSnap.data().count,
+          laudosComArquivo: laudosComArquivoSnap.data().count,
           consultasHoje: 0, // TODO: somar quando a coleção 'consultas' existir com campo de data
         });
       } catch (error) {
@@ -75,10 +86,14 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
     carregarDados();
   }, []);
 
+  // % dos laudos que já têm o arquivo do exame anexado
+  const pctComArquivo =
+    contadores.laudos > 0 ? Math.round((contadores.laudosComArquivo / contadores.laudos) * 100) : 0;
+
   return (
     <View style={styles.container}>
       {/* Cabeçalho */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <View style={styles.headerLeft}>
           <Ionicons name="business" size={22} color="#0E3D3A" />
           <Text style={styles.headerTitle} numberOfLines={1}>
@@ -108,48 +123,65 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
         </View>
       </View>
 
-
       <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ResumoClinica />
+        <MapaFaltasResumo />
+
         {/* Card grande: Pacientes */}
-        <View style={styles.cardFull}>
+        <TouchableOpacity
+          style={styles.cardFull}
+          onPress={() => navigation.navigate('Pacientes')}
+        >
           <View style={[styles.iconCircle, { backgroundColor: '#0E3D3A' }]}>
             <Ionicons name="person" size={20} color="#FFFFFF" />
           </View>
           <Text style={styles.cardLabel}>Pacientes</Text>
           <Text style={styles.cardValue}>{contadores.pacientes.toLocaleString('pt-BR')}</Text>
-        </View>
+        </TouchableOpacity>
 
         {/* Linha com dois cards menores */}
         <View style={styles.row}>
-          <View style={styles.cardHalf}>
-            <View style={[styles.iconCircle, { backgroundColor: '#3FD9C4' }]}>
-              <Ionicons name="people" size={20} color="#FFFFFF" />
-            </View>
-            <Text style={styles.cardLabel}>Dependentes</Text>
-            <Text style={styles.cardValue}>{contadores.dependentes.toLocaleString('pt-BR')}</Text>
-          </View>
+          <TouchableOpacity
+            style={styles.cardHalf}
+            onPress={() => navigation.navigate('ListagemResponsaveis')}
+  >
+          <View style={[styles.iconCircle, { backgroundColor: '#3FD9C4' }]}>
+        <Ionicons name="people" size={20} color="#FFFFFF" />
+        </View>
+        <Text style={styles.cardLabel}>Responsáveis</Text>
+        <Text style={styles.cardValue}>{contadores.responsaveis.toLocaleString('pt-BR')}</Text>
+        </TouchableOpacity>
 
-          <View style={styles.cardHalf}>
+          <TouchableOpacity 
+            style={styles.cardHalf}
+            onPress={() => navigation.navigate('ListagemMedicos')}
+          >
             <View style={[styles.iconCircle, { backgroundColor: '#B0342A' }]}>
               <Ionicons name="medkit" size={20} color="#FFFFFF" />
             </View>
             <Text style={styles.cardLabel}>Médicos</Text>
             <Text style={styles.cardValue}>{contadores.medicos}</Text>
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* Card Laudos/Exames com barra de progresso */}
-        <View style={styles.cardFull}>
+        <TouchableOpacity 
+        style={styles.cardFull}
+        onPress={() => navigation.navigate('Laudos')}>
           <View style={[styles.iconCircle, { backgroundColor: '#DCE7F5' }]}>
             <Ionicons name="document-text" size={20} color="#3E5C76" />
           </View>
           <Text style={styles.cardLabel}>Laudos/Exames</Text>
           <Text style={styles.cardValue}>{contadores.laudos}</Text>
           <View style={styles.progressBarBg}>
-            <View style={[styles.progressBarFill, { width: '75%' }]} />
+            <View style={[styles.progressBarFill, { width: `${pctComArquivo}%` }]} />
           </View>
-          <Text style={styles.progressText}>75% processados hoje</Text>
-        </View>
+          <Text style={styles.progressText}>
+            {contadores.laudos > 0
+              ? `${pctComArquivo}% com arquivo anexado`
+              : 'Nenhum laudo cadastrado'}
+          </Text>
+        </TouchableOpacity>
 
         {/* Card escuro: Consultas do Dia */}
         <TouchableOpacity
@@ -165,17 +197,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
       </ScrollView>
 
       {/* Rodapé de navegação */}
-      <View style={styles.tabBar}>
-        <TouchableOpacity style={styles.tabItem}>
-          <Ionicons name="home" size={22} color="#0E6B5C" />
-          <Text style={[styles.tabLabel, { color: '#0E6B5C' }]}>Início</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('Perfil')}>
-          <Ionicons name="person-outline" size={22} color="#5A6B69" />
-          <Text style={styles.tabLabel}>Perfil</Text>
-        </TouchableOpacity>
-      </View>
+      <BarraNavegacao ativa="inicio" />
     </View>
   );
 }
@@ -190,7 +212,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 50,
     paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#E2E5E9',

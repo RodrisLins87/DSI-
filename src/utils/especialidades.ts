@@ -1,0 +1,15 @@
+export const ESPECIALIDADES: string[] = [
+  'Clínico Geral',
+  'Cardiologia',
+  'Dermatologia',
+  'Endocrinologia',
+  'Ginecologia',
+  'Neurologia',
+  'Oftalmologia',
+  'Ortopedia',
+  'Pediatria',
+  'Psicologia',
+  'Psiquiatria',
+  'Odontologia',
+  'Urologia',
+];
