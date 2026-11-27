@@ -50,3 +50,34 @@ export const BAIRROS_MAPEADOS = TODOS_BAIRROS.filter(
 export function diametroDoCirculo(consultas: number, maiorN: number, escala = 1): number {
   return (16 + 30 * Math.sqrt(consultas / Math.max(1, maiorN))) * escala;
 }
+
+// ---------------------------------------------------------------------------
+// Concentração de pacientes da clínica por bairro (camada "Pacientes da clínica").
+
+/** Cinco tons de verde-água, do claro (poucos pacientes) ao escuro (muitos). */
+export const ESCALA_CONCENTRACAO = ['#D5EFEC', '#9FD9D3', '#5BBDB5', '#1F9A93', '#006A66'];
+
+/** Índice do tom: cada tom cobre 1/5 do intervalo (0, maximo]. */
+function indiceDaConcentracao(total: number, maximo: number): number {
+  if (maximo <= 0 || total <= 0) return 0;
+  const n = ESCALA_CONCENTRACAO.length;
+  return Math.min(n - 1, Math.max(0, Math.ceil((total / maximo) * n) - 1));
+}
+
+/** Tom da escala verde-água pela proporção total/maximo. */
+export const corDaConcentracao = (total: number, maximo: number) =>
+  ESCALA_CONCENTRACAO[indiceDaConcentracao(total, maximo)];
+
+/**
+ * Legenda da escala: um item por tom, com o intervalo de nº de pacientes que ele cobre
+ * (mesma regra de corDaConcentracao). Tom sem nenhum valor inteiro possível fica com "–".
+ */
+export function faixasDaConcentracao(maximo: number): { cor: string; rotulo: string }[] {
+  const n = ESCALA_CONCENTRACAO.length;
+  return ESCALA_CONCENTRACAO.map((cor, i) => {
+    const de = Math.floor((i * maximo) / n) + 1;
+    const ate = Math.floor(((i + 1) * maximo) / n);
+    const rotulo = de > ate ? '–' : de === ate ? `${de}` : `${de}–${ate}`;
+    return { cor, rotulo };
+  });
+}
